@@ -6,6 +6,8 @@ Machine Learning for simulating BEC systems
 ## How to generate data?
 
 ```python
+from neuralbec import data
+
 data.generate_varg(
     fn=lambda g : data.particle_density_BEC1D(
       dim=512, radius=24, angular_momentum=1,
