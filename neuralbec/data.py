@@ -118,7 +118,8 @@ def plot_wave_function(x, psi, fontsize=16, title=None, save_to=None):
 
 
 def load(name, path='data/'):
-  datadump = pickle.load(open('{}/{}.data'.format(path, name), 'rb'))
+  filename = os.path.join(path, name)
+  datadump = pickle.load(open(filename, 'rb'))
   inputs = [ g for g, density in datadump['data'] ]
   outputs = [ density for g, density in datadump['data'] ]
   reference = { 'x' : datadump['x'] }

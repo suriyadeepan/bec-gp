@@ -1,5 +1,10 @@
 from neuralbec import data
+from neuralbec import utils
+from neuralbec.model.ffn import SimpleRegressor
+from neuralbec.train import train_model
 
+import torch
+import torch.nn as nn
 import argparse
 import logging
 
@@ -17,6 +22,7 @@ parser = argparse.ArgumentParser(
 
 
 if __name__ == '__main__':
+  """
   # Generate 1D BEC
   data.generate_varg(
       fn=lambda g : data.particle_density_BEC1D(
@@ -26,3 +32,15 @@ if __name__ == '__main__':
         ),
       num_samples=10, filename='10samples.data'
       )
+  """
+  inputs, psi, reference = data.load('bec1d.data')
+  model = SimpleRegressor(1, 512)
+  hparams = {
+      'batch_size' : 64,
+      'loss_fn' : nn.MSELoss(),
+      'optim' : torch.optim.Adam(model.parameters())
+      }
+  # train/test split
+  trainset, testset = utils.split_dataset((inputs, psi))
+  # train
+  train_model(model, ((inputs, psi), None), hparams, epochs=100)
