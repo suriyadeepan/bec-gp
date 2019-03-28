@@ -3,7 +3,7 @@
 Machine Learning for simulating BEC systems
 
 
-## How to generate data?
+## Data Generation
 
 ```python
 from neuralbec import data
@@ -16,4 +16,16 @@ data.generate_varg(
       ),
     num_samples=10, filename='10samples.data'
     )
+```
+
+## Training
+
+```bash
+python3 main.py --train --model='ffn' --data='bec1d'
+```
+
+## Prediction
+
+```bash
+python3 main.py --predict --model='ffn' --data='bec1d'
 ```
