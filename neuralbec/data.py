@@ -100,7 +100,8 @@ def particle_density_BEC1D(dim, radius, angular_momentum, time_step,
   return { 'x' : grid.get_x_axis()}, psi
 
 
-def plot_wave_function(x, psi, fontsize=16, title=None, save_to=None):
+# TODO : move to plot.py
+def plot_wave_function(x, psi, fontsize=16, title=None, save_to=None, show=True):
   """ Plot Wave Function """
   # set title
   if title:
@@ -114,7 +115,8 @@ def plot_wave_function(x, psi, fontsize=16, title=None, save_to=None):
     plt.savefig(save_to)
     logger.info('Figure saved to {}'.format(save_to))
   # disply image
-  plt.show()
+  if show:
+    plt.show()
 
 
 def load(name, path='data/'):

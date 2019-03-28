@@ -1,6 +1,8 @@
 import pickle
 import logging
 
+import numpy as np
+
 
 def save(d, filename):
   pickle.dump(d, open(filename, 'wb'))
@@ -29,5 +31,26 @@ def split_dataset(dataset, ratio=0.8):
   """
   inputs, outputs = dataset
   n = len(inputs)
-  m = int(n * 0.8)
+  m = int(n * ratio)
   return ( (inputs[:m], outputs[:m]), (inputs[m:], outputs[m:]) )
+
+
+def shuffle(dataset):
+  """Shuffle data points
+
+  Parameters
+  ----------
+  dataset : tuple
+    ( inputs, outputs ) tuple of list of inputs and outputs
+
+  Returns
+  -------
+  tuple
+    Tuple of shuffled lists of inputs and outputs
+  """
+  inputs, outputs = dataset
+  shuffled_indices = np.arange(len(inputs))
+  np.random.shuffle(shuffled_indices)
+  return ( np.array(inputs, dtype='float32')[shuffled_indices],
+      np.array(outputs, dtype='float32')[shuffled_indices]
+      )
