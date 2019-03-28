@@ -143,3 +143,16 @@ def save(datadict, name, path='data/'):
   filename = os.path.join(path, name)
   pickle.dump(datadict, open(filename, 'wb'))
   logger.info('Saved to {}'.format(filename))
+
+
+def make_dataset(name):
+  inputs, psi, reference = load('{}.data'.format(name))
+  # train/test split
+  trainset, testset = utils.split_dataset(  # train/test split
+      utils.shuffle((inputs, psi)),         # shuffle dataset
+      ratio=0.7
+      )
+  # test/valid split
+  testset, validset = utils.split_dataset(testset, ratio=0.5)
+
+  return (trainset, testset, validset)

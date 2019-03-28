@@ -1,8 +1,10 @@
 from neuralbec import data
 from neuralbec import utils
-from neuralbec.model.ffn import SimpleRegressor
 from neuralbec.train import fit
 from config import conf
+
+from neuralbec.model.ffn import SimpleRegressor
+from neuralbec.model.ffn import FFN
 
 import torch
 import argparse
@@ -54,20 +56,26 @@ def generate_one_dim(name=None):
 
 
 def train_sregressor(model_name, data_name):
-  inputs, psi, reference = data.load('{}.data'.format(data_name))
+  # get dataset from name
+  trainset, testset, validset = data.make_dataset(data_name)
+  # build Regressor
   model = SimpleRegressor(1, 512)
-  # train/test split
-  trainset, testset = utils.split_dataset(  # train/test split
-      utils.shuffle((inputs, psi)),         # shuffle dataset
-      ratio=0.7
-      )
-  # test/valid split
-  testset, validset = utils.split_dataset(testset, ratio=0.5)
   # fit model on trainset
   fit(model, (trainset, testset), conf, epochs=100)
   # save model
   model.save()
+  return model
 
+
+def train_ffn(model_name, data_name):
+  # get dataset from name
+  trainset, testset, validset = data.make_dataset(data_name)
+  # build Regressor
+  model = FFN(1, 750, 512)
+  # fit model on trainset
+  fit(model, (trainset, testset), conf, epochs=conf['epochs'])
+  # save model
+  model.save()
   return model
 
 
@@ -114,3 +122,5 @@ if __name__ == '__main__':
     assert args.data
     if args.model == 'sregressor':
       train_sregressor(args.model, args.data)
+    if args.model == 'ffn':
+      train_ffn(args.model, args.data)
