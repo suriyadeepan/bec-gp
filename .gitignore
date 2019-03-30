@@ -105,6 +105,13 @@ venv.bak/
 doc/
 
 .DS_Store
-data/
 images/
 r/
+
+data/
+bin/
+notebooks/
+
+.recompute/
+re.runner
+requirements.txt
