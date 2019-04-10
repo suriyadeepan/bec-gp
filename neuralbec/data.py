@@ -90,7 +90,7 @@ def generate_parallel(gen_fn, inputs, filename, save_every=20):
 
 
 def particle_density_BEC1D(dim, radius, angular_momentum, time_step,
-  coupling, potential_fn, iterations):
+    coupling, potential_fn, iterations, wave_function):
   """Estimate Particle Density of 1-dimensional BEC system
 
   Parameters
@@ -117,7 +117,7 @@ def particle_density_BEC1D(dim, radius, angular_momentum, time_step,
   grid = ts.Lattice1D(dim, radius)
   # initialize state
   state = ts.State(grid, angular_momentum)
-  state.init_state(lambda r : 1. / np.sqrt(radius))  # constant state
+  state.init_state(wave_function)
   # init potential
   potential = ts.Potential(grid)
   potential.init_potential(potential_fn)  # harmonic potential
@@ -126,11 +126,15 @@ def particle_density_BEC1D(dim, radius, angular_momentum, time_step,
   # setup solver
   solver = ts.Solver(grid, state, hamiltonian, time_step)
   # Evolve the system
-  solver.evolve(iterations, True)
+  solver.evolve(iterations, False)
   # Compare the calculated wave functions w.r.t. groundstate function
-  psi = np.sqrt(state.get_particle_density()[0])
+  # psi = np.sqrt(state.get_particle_density()[0])
+  psi = state.get_particle_density()[0]
   # psi / psi_max
   psi = psi / max(psi)
+
+  print('mean', np.mean(psi))
+  print('sigma', np.var(psi))
 
   return {
       'x' : grid.get_x_axis(),

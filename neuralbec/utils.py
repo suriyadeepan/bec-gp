@@ -2,6 +2,7 @@ import pickle
 import logging
 
 import numpy as np
+import torch.distributions as dist
 
 
 def save(d, filename):
@@ -54,3 +55,13 @@ def shuffle(dataset):
   return ( np.array(inputs, dtype='float32')[shuffled_indices],
       np.array(outputs, dtype='float32')[shuffled_indices]
       )
+
+
+def bell(mu, sigma, x):
+  # create normal
+  norm = dist.Normal(mu, sigma)
+  # bell curve from pdf
+  psi = norm.log_prob(x).float().exp().numpy()
+  # normalize
+  psi = psi / psi.max()
+  return psi
