@@ -10,6 +10,9 @@ from neuralbec import utils
 
 from multiprocessing.pool import ThreadPool as Pool
 
+from tqdm import tqdm
+import numpy as np
+
 logger = utils.get_logger(__name__)
 
 
@@ -272,3 +275,24 @@ def make_dataset(name):
   testset, validset = utils.split_dataset(testset, ratio=0.5)
 
   return (trainset, testset, validset)
+
+
+def write_to_csv(inputs, outputs, reference, name='data'):
+  with open('{}.csv'.format(name), 'w') as f:
+    for input, output in tqdm(zip(inputs, outputs)):
+      f.write('{}, {}, {}'.format(input, output, reference))
+
+
+# def numpy_to_csv(inputs, outputs, reference, name='data'):
+#   np.
+
+
+if __name__ == '__main__':
+  # read from pickle
+  inputs, outputs, reference = load('bec1d.data')
+  # write to csv
+  # write_to_csv(inputs, outputs, reference)
+  print(np.array(inputs).shape, np.array(outputs).shape, np.array(reference['x']).shape)
+  np.savetxt("10_outputs.csv", np.array(outputs), delimiter=",")
+  np.savetxt("10_inputs.csv", np.array(inputs), delimiter=",")
+  np.savetxt("10_reference.csv", np.array(reference['x']), delimiter=",")
