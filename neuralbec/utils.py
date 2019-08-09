@@ -1,6 +1,7 @@
 import pickle
 import logging
 
+import pandas as pd
 import numpy as np
 import torch.distributions as dist
 
@@ -65,3 +66,7 @@ def bell(mu, sigma, x):
   # normalize
   psi = psi / psi.max()
   return psi
+
+
+def to_df(ddict):
+  return pd.DataFrame(ddict)
