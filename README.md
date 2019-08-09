@@ -20,7 +20,7 @@ class ConfigHarmonic:
   coupling = 1
   potential_fn = None
   iterations = 10000
-  coupling_vars = [1, 300]  # , 100]
+  coupling_vars = [0.5, 1, 10, 90, 130, 200, 240, 300]  # variable `g` values
   name = 'harmonic'
 
   def wave_function(r):  # constant
