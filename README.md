@@ -21,6 +21,7 @@ class ConfigHarmonic:
   potential_fn = None
   iterations = 10000
   coupling_vars = [1, 300]  # , 100]
+  name = 'harmonic'
 
   def wave_function(r):  # constant
     return 1. / np.sqrt(24)
@@ -34,3 +35,5 @@ Run `main.py` with `--simulate` switch enabled.
 ```bash
 python3 main.py --simulate
 ```
+
+Data will be saved to `results/bec_harmonic.csv`

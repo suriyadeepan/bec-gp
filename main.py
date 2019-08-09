@@ -28,10 +28,8 @@ args = parser.parse_args()
 
 
 if __name__ == '__main__':
-  if args.simulate:
-    # smodel = OneDimensionalBec(ConfigHarmonic)
-    # sdata = smodel.simulate()
-    # print(sdata)
-    exp = VariableCouplingBec(ConfigHarmonic)
-    data = exp.run()
-    print(data.df)
+
+  if args.simulate:  # simulation mode
+    exp = VariableCouplingBec(ConfigHarmonic)  # create experiment
+    data = exp.run()  # run experiment; generate data
+    data.save(ConfigHarmonic.name)  # save simulated data to disk

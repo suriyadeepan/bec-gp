@@ -19,6 +19,10 @@ class OneDimensionalData(SimulatedData):
   def add(self, df):
     self.df = self.df.append(df, ignore_index=True)
 
+  def save(self, name=''):
+    self.df.to_csv('results/bec_{}.csv'.format(name),
+        sep='\t', encoding='utf-8')
+
 
 class Simulation:
 
