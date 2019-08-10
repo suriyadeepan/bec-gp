@@ -78,45 +78,6 @@ def one_dimensional_bec(config, coupling=None, iterations=None):
       })
 
 
-class OneDimensionalBec(Simulation):
-
-  def __init__(self, config, coupling=None):
-    # keep track of config
-    self.config = config
-    # get coupling strength
-    self.coupling = coupling if coupling else config.coupling
-    # Set up lattice
-    self.grid = ts.Lattice1D(config.dim, config.radius)
-    # initialize state
-    self.state = ts.State(self.grid, config.angular_momentum)
-    self.state.init_state(config.wave_function)
-    # init potential
-    potential = ts.Potential(self.grid)
-    potential.init_potential(config.potential_fn)  # harmonic potential
-    # build hamiltonian with coupling strength `g`
-    hamiltonian = ts.Hamiltonian(self.grid, potential, 1., self.coupling)
-    # setup solver
-    self.solver = ts.Solver(self.grid, self.state, hamiltonian, config.time_step)
-
-  def simulate(self, iterations=None):
-    iterations = self.config.iterations if not iterations else iterations
-    # Evolve the system
-    self.solver.evolve(iterations, False)
-    # Compare the calculated wave functions w.r.t. groundstate function
-    # psi = np.sqrt(state.get_particle_density()[0])
-    psi = self.state.get_particle_density()[0]
-    # psi / psi_max
-    psi = psi / max(psi)
-    # save data
-    self.data = utils.to_df({
-      'x' : self.grid.get_x_axis(),
-      'g' : np.ones(psi.shape) * self.coupling,
-      'psi' : psi
-      })
-
-    return self.data
-
-
 class Experiment:
 
   def __init__(self):
