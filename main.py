@@ -1,4 +1,5 @@
 from neuralbec.simulation import VariableCouplingBec
+from neuralbec.simulation import OneDimensionalData
 from config import ConfigHarmonic
 import logging
 import argparse
@@ -18,7 +19,9 @@ parser = argparse.ArgumentParser(
 # -- SIMULATE ---
 # ---------------
 parser.add_argument('--simulate', default=False, action='store_true',
-    help='Generate Data')
+    help='Run simulation')
+parser.add_argument('--approximate', default=False, action='store_true',
+    help='Create Approximation')
 """
 # train mode
 parser.add_argument('--train', default=False, action='store_true',
@@ -33,3 +36,11 @@ if __name__ == '__main__':
     exp = VariableCouplingBec(ConfigHarmonic)  # create experiment
     data = exp.run()  # run experiment; generate data
     data.save(ConfigHarmonic.name)  # save simulated data to disk
+  elif args.approximate:  # appoximate mode
+    data = OneDimensionalData(ConfigHarmonic.name)
+    # create model
+    model = ConfigHarmonic.model()
+    X = data.df.loc[:500, ['x', 'g']]
+    y = data.df.loc[:500, 'psi']
+    model.fit(X, y)
+    model.save()

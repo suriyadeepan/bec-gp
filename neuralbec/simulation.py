@@ -1,5 +1,6 @@
 import trottersuzuki as ts
 import numpy as np
+import pandas as pd
 
 from neuralbec import utils
 from tqdm import tqdm
@@ -13,8 +14,23 @@ class SimulatedData:
 
 class OneDimensionalData(SimulatedData):
 
-  def __init__(self):
-    self.df = utils.to_df({ 'x' : [], 'psi' : [], 'g' : [] })
+  def __init__(self, name=None):
+    if not name:
+      self.df = utils.to_df({ 'x' : [], 'psi' : [], 'g' : [] })
+    else:
+      self.df = pd.read_csv('results/bec_{}.csv'.format(name), sep='\t')
+
+  @property
+  def X(self):
+    return self.df.x
+
+  @property
+  def psi(self):
+    return self.df.psi
+
+  @property
+  def g(self):
+    return self.df.g
 
   def add(self, df):
     self.df = self.df.append(df, ignore_index=True)
