@@ -46,6 +46,14 @@ class Simulation:
     pass
 
 
+class Bec(Simulation):
+
+  def __new__(self, config):
+    data = OneDimensionalData()
+    data.add(one_dimensional_bec(config))
+    return data
+
+
 def one_dimensional_bec(config, coupling=None, iterations=None):
     # get coupling strength
     coupling = coupling if coupling else config.coupling

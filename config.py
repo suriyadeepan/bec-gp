@@ -12,7 +12,7 @@ class ConfigHarmonic:
   iterations = 10000
   # coupling_vars = [0.5, 1, 10, 90, 130, 200, 240, 300]  # variable `g` values
   coupling_vars = np.random.uniform(0, 500, (2000,))
-  name = 'harmonic_2000_pts'
+  name = 'harmonic'
   model = GPApproximation
 
   def wave_function(r):  # constant
