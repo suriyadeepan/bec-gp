@@ -2,7 +2,7 @@ from neuralbec.simulation import VariableCouplingBec, Bec
 from neuralbec.simulation import OneDimensionalData
 from neuralbec.visualize import plot_from_file
 
-from config import BasicConfig, ChildConfig
+from config import BasicConfig, Harmonic
 
 import logging
 import argparse
@@ -11,7 +11,7 @@ import warnings
 import os
 
 warnings.filterwarnings("ignore")
-config = ChildConfig  # ------- configuration goes here --------
+config = Harmonic  # ------- configuration goes here --------
 
 # setup logger
 logging.basicConfig(level=logging.INFO)
@@ -46,6 +46,10 @@ if __name__ == '__main__':
   if args.simulate_once:  # one-off simulation mode
     data = Bec(config)
     data.save(f'g={config.coupling}.{config.name}')
+    plot_from_file(os.path.join(
+      'results',
+      f'bec_g={config.coupling}.{config.name}.csv'
+      ))
   elif args.simulate:  # simulation mode
     exp = VariableCouplingBec(config)  # create experiment
     data = exp.run()  # run experiment; generate data
@@ -60,7 +64,11 @@ if __name__ == '__main__':
     model.fit(X, y)
     model.save()
   elif args.visualize:
+    # plot_from_file(os.path.join(
+    #   'results',
+    #   f'bec_g={config.coupling}.{config.name}.csv'
+    #   ))
     plot_from_file(os.path.join(
       'results',
-      f'bec_g={config.coupling}.{config.name}.csv'
+      f'bec_{config.name}.csv'
       ))
