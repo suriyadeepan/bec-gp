@@ -3,7 +3,6 @@ from neuralbec.simulation import OneDimensionalData
 from neuralbec.visualize import plot_from_file
 
 from config import BasicConfig
-config = BasicConfig
 
 import logging
 import argparse
@@ -12,6 +11,7 @@ import warnings
 import os
 
 warnings.filterwarnings("ignore")
+config = BasicConfig  # ------- configuration goes here --------
 
 # setup logger
 logging.basicConfig(level=logging.INFO)
