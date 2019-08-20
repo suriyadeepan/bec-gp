@@ -2,7 +2,7 @@ from neuralbec.simulation import VariableCouplingBec, Bec
 from neuralbec.simulation import OneDimensionalData
 from neuralbec.visualize import plot_from_file
 
-from config import BasicConfig
+from config import BasicConfig, ChildConfig
 
 import logging
 import argparse
@@ -11,7 +11,7 @@ import warnings
 import os
 
 warnings.filterwarnings("ignore")
-config = BasicConfig  # ------- configuration goes here --------
+config = ChildConfig  # ------- configuration goes here --------
 
 # setup logger
 logging.basicConfig(level=logging.INFO)
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     data = OneDimensionalData(config.name)
     # create model
     model = config.model()
-    df_sub = data.df.sample(500)
+    df_sub = data.df.sample(config.sub_sample_count)
     X = df_sub[['x', 'g']]
     y = df_sub.psi
     model.fit(X, y)
