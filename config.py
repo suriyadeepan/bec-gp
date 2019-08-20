@@ -44,6 +44,7 @@ class Harmonic(BasicConfig):
 
   # ----------------- General --------------- #
   name = 'harmonic'  # name of simulation/experiment/data/model; handle to everything
+  num_plots = 15
 
   # -------- Trotter Suzuki ----------------- #
   coupling_vars = np.random.uniform(0, 300, (1000,))  # variabel `g` values

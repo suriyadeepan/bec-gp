@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
@@ -19,13 +20,15 @@ def plotly_plot_wave_fn(g, x, psi):
   fig.show()
 
 
-def sample_data_from_file(filename):
-    df = pd.read_csv(filename, sep='\t')
-    x = df.x.unique()
-    g = df.g.unique()
-    g_sub_sampled = g[np.random.randint(0, len(g), (9, ))]
-    psi_sub_sampled = [ df.loc[df.g == g, 'psi'].to_numpy() for g in g_sub_sampled ]
-    return [ (g, pd.DataFrame({ 'x' : x, 'y' : psi })) for g, psi in zip(g_sub_sampled, psi_sub_sampled) ]
+def sample_data_from_file(filename, n):
+  n = 9 if not n else n
+  df = pd.read_csv(filename, sep='\t')
+  x = df.x.unique()
+  g = df.g.unique()
+  g_sub_sampled = g[np.random.randint(0, len(g), (n, ))]
+  psi_sub_sampled = [ df.loc[df.g == g, 'psi'].to_numpy() for g in g_sub_sampled ]
+  return [ (g, pd.DataFrame({ 'x' : x, 'y' : psi }))
+      for g, psi in zip(g_sub_sampled, psi_sub_sampled) ]
 
 
 def plot_multi(data):
@@ -35,8 +38,8 @@ def plot_multi(data):
       subplot_titles=['g = {0:.2f}'.format(g) for g, df in data]
       )
   k = 0
-  for i in range(n):
-    for j in range(m):
+  for i in range(m):
+    for j in range(n):
       g, df = data[k]
       k = k + 1
       fig.add_trace(go.Scatter(x=df.x, y=df.y),
@@ -58,11 +61,18 @@ def plotly_layout_setup(fig, title):
   return fig
 
 
-def plot_from_file(filename):
+def plot_from_file(filename, num_plots=None):
   if 'g=' in filename:  # single simulation plot
     df = pd.read_csv(filename, sep='\t')
     assert len(df.g.unique()) == 1
     plotly_plot_wave_fn(df.g.iloc[0], df.x, df.psi)
   else:  # multi simulation plot
-    data = sample_data_from_file(filename)
+    data = sample_data_from_file(filename, n=num_plots)
     plot_multi(data)
+
+
+def plot(config):
+  for f in [ f'bec_g={config.coupling}.{config.name}.csv', f'bec_{config.name}.csv']:
+    path = os.path.join('results', f)
+    if os.path.exists(path):
+      plot_from_file(path, num_plots=config.num_plots)

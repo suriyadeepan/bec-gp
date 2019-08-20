@@ -1,6 +1,6 @@
 from neuralbec.simulation import VariableCouplingBec, Bec
 from neuralbec.simulation import OneDimensionalData
-from neuralbec.visualize import plot_from_file
+from neuralbec.visualize import plot, plot_from_file
 
 from config import BasicConfig, Harmonic
 
@@ -68,7 +68,8 @@ if __name__ == '__main__':
     #   'results',
     #   f'bec_g={config.coupling}.{config.name}.csv'
     #   ))
-    plot_from_file(os.path.join(
-      'results',
-      f'bec_{config.name}.csv'
-      ))
+    # plot_from_file(os.path.join(
+    #  'results',
+    #  f'bec_{config.name}.csv'
+    #  ))
+    plot(config)
