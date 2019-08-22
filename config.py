@@ -17,7 +17,7 @@ class BasicConfig:
   coupling = 200.045  # coupling coefficient (g)
   iterations = 10000  # number of iterations of evolution
   # coupling_vars = [0.5, 1, 10, 90, 130, 200, 240, 300]
-  coupling_vars = np.random.uniform(0, 200, (1000,))  # variabel `g` values
+  coupling_vars = np.random.uniform(0, 10, (500,))  # variabel `g` values
 
   def wave_function(x, y):  # a working wave function
     return np.exp(-0.5 * (x**2 + y**2)) / np.sqrt(np.pi)
@@ -27,10 +27,11 @@ class BasicConfig:
 
   # -------- Approximation ------------------ #
   model = GPApproximation  # approximating model
-  sub_sample_count = 1000  # number of datapoints to train the mdoel
+  sub_sample_count = 250  # number of datapoints to train the mdoel
 
   # -------- Visualization ------------------ #
   num_plots = 9
+  num_prediction_plots = 1
 
 
 class ChildConfig(BasicConfig):  # demo of using your own config
@@ -54,3 +55,21 @@ class Harmonic(BasicConfig):
 
   def potential_fn(x, y):
     return 0.5 * (x ** 2 + y ** 2)
+
+
+class OpticalPot(BasicConfig):
+
+  """ OpticalPot Configuration """
+
+  # -------- Trotter Suzuki ----------------- #
+  coupling_vars = np.random.uniform(0, 10, (500,))  # variabel `g` values
+
+  # ----------------- General --------------- #
+  name = 'optical_pot'
+
+  # -------- Approximation ------------------ #
+  sub_sample_count = 150
+
+  # -------- Visualization ------------------ #
+  num_plots = 15
+  num_prediction_plots = 9
