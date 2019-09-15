@@ -8,6 +8,8 @@ class BasicConfig:
 
   # ----------------- General --------------- #
   name = 'working'  # name of simulation/experiment/data/model; handle to everything
+  path = 'results'
+  two_component = False
 
   # -------- Trotter Suzuki ----------------- #
   dim = 512  # dimensions of grid
@@ -31,12 +33,18 @@ class BasicConfig:
 
   # -------- Visualization ------------------ #
   num_plots = 9
-  num_prediction_plots = 1
+  num_prediction_plots = 3
 
 
 class ChildConfig(BasicConfig):  # demo of using your own config
   name = 'child'  # just change what needs to be changed
   coupling = 0.5
+  path = 'newresults'
+  # variable `g`
+  coupling_vars = np.arange(0.1, 1, 0.1)
+  # visuals
+  num_plots = 6
+  num_prediction_plots = 9
 
 
 class Harmonic(BasicConfig):
@@ -48,7 +56,7 @@ class Harmonic(BasicConfig):
   num_plots = 15
 
   # -------- Trotter Suzuki ----------------- #
-  coupling_vars = np.random.uniform(0, 300, (1000,))  # variabel `g` values
+  coupling_vars = np.random.uniform(0, 300, (1000,))  # variable `g` values
 
   def wave_function(x, y):
     return np.exp(-0.5 * (x**2 + y**2)) / np.sqrt(np.pi)
@@ -62,7 +70,7 @@ class OpticalPot(BasicConfig):
   """ OpticalPot Configuration """
 
   # -------- Trotter Suzuki ----------------- #
-  coupling_vars = np.random.uniform(0, 10, (500,))  # variabel `g` values
+  coupling_vars = np.random.uniform(0, 10, (500,))  # variable `g` values
 
   # ----------------- General --------------- #
   name = 'optical_pot'
@@ -73,3 +81,21 @@ class OpticalPot(BasicConfig):
   # -------- Visualization ------------------ #
   num_plots = 15
   num_prediction_plots = 9
+
+
+class TwoComponentConfig(BasicConfig):
+
+  two_component = True
+  name = 'basic_2component'
+
+  def potential_fn(x, y):
+    return 0.5 * (x ** 2 + y ** 2)
+
+  potential_fn_1 = potential_fn
+  potential_fn_2 = potential_fn
+
+  coupling = {
+      'g_1' : 1,
+      'g_2' : 1,
+      'g_12' : 0
+      }

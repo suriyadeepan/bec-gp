@@ -106,19 +106,20 @@ def plot_from_file(filename, num_plots=None):
 
 def plot(config):
   for f in [ f'bec_g={config.coupling}.{config.name}.csv', f'bec_{config.name}.csv']:
-    path = os.path.join('results', f)
+    path = os.path.join(config.path, f)
     if os.path.exists(path):
       plot_from_file(path, num_plots=config.num_plots)
 
 
 def plot_prediction(config):
   # read saved model from file
-  # with open(f'results/gpapprox.sav', 'rb') as bf:
-  with open(f'results/model_{config.name}.sav', 'rb') as bf:
+  with open(os.path.join(
+    config.path, f'model_{config.name}.sav'), 'rb') as bf:
     model = pickle.load(bf)
 
   # get data samples from file
-  samples = sample_structured_data_from_file(f'results/bec_{config.name}.csv',
+  samples = sample_structured_data_from_file(
+      os.path.join(config.path, f'bec_{config.name}.csv'),
       config.num_prediction_plots)
 
   plot_sample_prediction(model, samples)
