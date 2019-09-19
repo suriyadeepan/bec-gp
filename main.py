@@ -4,6 +4,7 @@ from neuralbec.visualize import render_prediction_plot
 from neuralbec.visualize import make_prediction_plot
 from neuralbec.visualize import plot_predictions_overlay
 from neuralbec.approximations import fit, make_testset
+from neuralbec.colors import color_list
 
 from config import configs, setup
 
@@ -15,7 +16,9 @@ import argparse
 import warnings
 
 import os
+import random
 
+colors = random.sample(color_list, 20)
 
 # ignore warnings
 warnings.filterwarnings("ignore")
@@ -94,11 +97,11 @@ if __name__ == '__main__':
     if couplings is None:
       couplings = [ float(g) for g in args.couplings.replace(' ', '').split(',') ]
     data = []
-    for coupling in couplings:
+    for i, coupling in enumerate(couplings):
       sample = Bec(config, coupling).df
       model = config.model(config=config).load(
           os.path.join(config.path_to_results, config.name, args.model))
-      data.extend(make_prediction_plot(model, sample))
+      data.extend(make_prediction_plot(model, sample, (colors[i], colors[i+1])))
       if not args.overlay:
         render_prediction_plot(model, sample)
 

@@ -69,4 +69,3 @@ def make_testset(config, ssc):
       ).load()
   assert len(df) > 0
   return df.sample(ssc)
- 

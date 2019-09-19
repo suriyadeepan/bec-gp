@@ -42,19 +42,21 @@ def plotly_layout_setup(fig, title):
   return fig
 
 
-def make_prediction_plot(model, sample):
+def make_prediction_plot(model, sample, colors):
   # run sample through model
   y_pred, sigma = model.predict(sample[['x', 'g']])
-  # get `g` the scalar
+  g = sample.g.unique()[0]
+  # get colors
+  c1, c2 = colors
   # plots
   data = []
   if 'psi' in sample:
     data.append(go.Scatter(x=sample.x, y=sample.psi,
-        line=dict(color='red', dash='dot'), name='observations'))
+        line=dict(color=c2, dash='dot'), name=f'(g={g}) observations'))
   data.extend( [ go.Scatter(
-    x=sample.x, y=y_pred, line=dict(color='blue'), name='prediction'),
+    x=sample.x, y=y_pred, line=dict(color=c1), name=f'(g={g}) prediction'),
     go.Scatter(x=np.concatenate(
-      [sample.x.to_numpy(), sample.x.to_numpy()[::-1]]), y=np.concatenate([y_pred - 1.9600 * sigma, ]), line=dict(color='blue'), fill='tonexty', opacity=0.1, name='95% confidence interval')] )
+      [sample.x.to_numpy(), sample.x.to_numpy()[::-1]]), y=np.concatenate([y_pred - 1.9600 * sigma, ]), line=dict(color=c1), fill='tonexty', opacity=0.1, name=f'(g={g}) 95% confidence interval')] )
 
   return data
 
@@ -119,12 +121,17 @@ def plot_multi_grid(data):
 def plot_multi_overlay(data):
   plots = []
   for g, df in data:
-    plots.append(go.Scatter(x=df.x, y=df.y))
+    plots.append(go.Scatter(x=df.x, y=df.y, name=f'g={g}'))
   fig = go.Figure(plots)
-  #fig.layout.showlegend = False
+  fig.update_layout(legend=go.layout.Legend(x=0.9, y=0.95))
+  fig.layout.yaxis.title.text = 'ψ / max(ψ)'
+  fig.layout.xaxis.title.text = 'x'
   fig.show()
 
 
 def plot_predictions_overlay(data):
   fig = go.Figure(data)
+  fig.update_layout(legend=go.layout.Legend(x=0.8, y=0.95))
+  fig.layout.yaxis.title.text = 'ψ'
+  fig.layout.xaxis.title.text = 'x'
   fig.show()
