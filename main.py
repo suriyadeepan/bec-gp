@@ -1,9 +1,11 @@
 from neuralbec.simulation import VariableCouplingBec, Bec
-from neuralbec.simulation import OneDimensionalData
-from neuralbec.visualize import plot, plot_from_file, plot_prediction
+from neuralbec.visualize import build_visuals_from_file
+from neuralbec.visualize import render_prediction_plot
+from neuralbec.visualize import make_prediction_plot
+from neuralbec.visualize import plot_predictions_overlay
+from neuralbec.approximations import fit, make_testset
 
-from config import BasicConfig, Harmonic, OpticalPot
-from config import ChildConfig
+from config import configs, setup
 
 from pprint import PrettyPrinter
 pp = PrettyPrinter(indent=4)
@@ -14,81 +16,113 @@ import warnings
 
 import os
 
+
+# ignore warnings
 warnings.filterwarnings("ignore")
-config = OpticalPot  # ------- configuration goes here --------
-#config = ChildConfig
-# check if `config.path` exists
-if not os.path.exists(config.path):
-  os.mkdir(config.path)
 
-# setup logger
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# parse command-line arguments
+# [ .... config .... ]
 parser = argparse.ArgumentParser(
     description='neuralbec : Neural Network based simulation of BEC'
     )
-# ---------------
-# -- SIMULATE ---
-# ---------------
-parser.add_argument('--simulate-once', default=False, action='store_true',
-    help='Run simulation once')
+# ..
+# o Positional Arguments
+#     >> python3 main.py config
+parser.add_argument('config', type=str, help="Configuration Name")
+# ..
+# o Optional Arguments
+#     >> python3 main.py config --simulate --coupling=10.03
 parser.add_argument('--simulate', default=False, action='store_true',
     help='Run simulation')
+parser.add_argument('--coupling', type=float, default=None, help='Coupling Strength')
+parser.add_argument('--couplings', type=str, default=None,
+    help='Coupling Strengths')
 parser.add_argument('--approximate', default=False, action='store_true',
-    help='Create Approximation')
+    help='Create approximation on simulated data')
+parser.add_argument('--ssc', type=int, default=250,
+    help='(Subsample Count) Number of samples for fitting model')
+parser.add_argument('--search', default=False, action='store_true',
+    help='Optional switch for Hyperparameter Search')
+parser.add_argument('--predict', default=False, action='store_true',
+    help='Run prediction')
+parser.add_argument('--model', type=str, default=None, help='Saved model file')
 parser.add_argument('--visualize', default=False, action='store_true',
-    help='Visualize Wave function')
-parser.add_argument('--stats', default=False, action='store_true',
-    help='Spit out statistics of simulation/approximation')
-
-"""
-# train mode
-parser.add_argument('--train', default=False, action='store_true',
-    help='Train model on data')
-"""
+    help='Visualize results')
+parser.add_argument('--save-to-file', default=False, action='store_true',
+    help='Save figures to file')
+parser.add_argument('--overlay', default=False, action='store_true',
+    help='Visualize results')
+# ...
+# parse command-line arguments
 args = parser.parse_args()
 
 
 if __name__ == '__main__':
+  # .
+  # read configuration
+  config = configs[args.config]
+  setup(config)  # init directories
+  # ..
+  #   [[[[[ MODE ]]]]]
+  # ...
+  # ^_^_^ Simulate ^_^_^
+  # ...
+  #   One-off
+  if args.simulate and args.coupling:
+    Bec(config, args.coupling).save(config)
+  # ...
+  #   Variable Coupling Values
+  elif args.simulate and not args.coupling:
+    VariableCouplingBec(config).run().save(config)
+  # ...
+  # v_v_v Approximate v_v_v
+  # ...
+  #   Fit a model on simulated data
+  elif args.approximate and not args.search:
+    model = fit(config, args.ssc)
+  # ...
+  #   Hyperparameter Search
+  elif args.approximate and args.search:
+    testset = make_testset(config, args.ssc)
+    for ssc in config.sub_sample_counts:
+      fit(config, ssc, testset=testset)
+  # ...
+  #   Prediction
+  elif args.predict and args.model:
+    assert args.couplings or args.coupling
+    
+    couplings = [args.coupling] if args.coupling else None
+    if couplings is None:
+      couplings = [ float(g) for g in args.couplings.replace(' ', '').split(',') ]
+    data = []
+    for coupling in couplings:
+      sample = Bec(config, coupling).df
+      model = config.model(config=config).load(
+          os.path.join(config.path_to_results, config.name, args.model))
+      data.extend(make_prediction_plot(model, sample))
+      if not args.overlay:
+        render_prediction_plot(model, sample)
 
-  if args.simulate_once:  # one-off simulation mode
-    data = Bec(config)
-    data.save(f'g={config.coupling}.{config.name}')
-    plot_from_file(os.path.join(
-      config.path,
-      f'bec_g={config.coupling}.{config.name}.csv'
-      ))
-  elif args.simulate:  # simulation mode
-    exp = VariableCouplingBec(config)  # create experiment
-    data = exp.run()  # run experiment; generate data
-    data.save(config.name)  # save simulated data to disk
-  elif args.approximate and not args.visualize:  # appoximate mode
-    data = OneDimensionalData(config.path, config.name)
-    # create model
-    model = config.model(config=config)
-    print(len(data.df))
-    df_sub = data.df.sample(config.sub_sample_count)
-    X = df_sub[['x', 'g']]
-    y = df_sub.psi
-    model.fit(X, y)
-    # calculate error on test set
-    testset = data.df.sample(config.sub_sample_count)
-    error = model.evaluate(testset[['x', 'g']], testset['psi'])
-    # save model to disk
-    model.save()
-    # plot predictions; might as well
-    plot_prediction(config)
-  elif args.visualize and not args.approximate:
-    plot(config)
-  elif args.visualize and args.approximate:
-    plot_prediction(config)
-  elif args.stats:
-    print(config.name)
-    print('-' * len(config.name))
-    print('\nSimulation Stats')
-    pp.pprint(OneDimensionalData(path=config.path, name=config.name).stats)
-    print('\nModel Stats')
-    pp.pprint(config.model(config=config).load().stats)
+    if args.overlay:
+      plot_predictions_overlay(data)
 
+  # ...
+  #   **** >> Visualize **** >>
+  elif args.visualize:
+    path = os.path.join(config.path_to_results, config.name)
+    if args.couplings:
+      coupling_vars = [ float(g)
+          for g in args.couplings.replace(' ', '').split(',') ]
+      filename = 'sim_prediction.csv'
+      VariableCouplingBec(config).run(coupling_vars).save(config, filename)
+      build_visuals_from_file(
+          os.path.join(path, filename), args.save_to_file, args.overlay)
+    elif args.coupling:
+      Bec(config, args.coupling).save(config)
+      filename = 'sim_g={}.csv'.format(args.coupling)
+      build_visuals_from_file(os.path.join(path, filename),
+          args.save_to_file, args.overlay)
+    else:
+      files = os.listdir(path)
+      for f in files:
+        build_visuals_from_file(
+            os.path.join(path, f), args.save_to_file, args.overlay)
