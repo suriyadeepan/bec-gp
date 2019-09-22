@@ -14,6 +14,10 @@ def setup(config):
   path = os.path.join(config.path_to_results, config.name)
   if not os.path.exists(path):
     os.mkdir(path)
+  # and if "two-component"
+  path2 = os.path.join(path, "2")
+  if not os.path.exists(path2):
+    os.mkdir(path2)
 
 
 class BasicConfig:
@@ -22,6 +26,7 @@ class BasicConfig:
 
   # ----------------- General --------------- #
   name = 'working'  # name of simulation/experiment/data/model; handle to everything
+  _type = 'one-component'
   path_to_results = 'results'
   two_component = False
 
@@ -100,24 +105,6 @@ class OpticalPot(BasicConfig):
   num_prediction_plots = 15
 
 
-class TwoComponentConfig(BasicConfig):
-
-  two_component = True
-  name = 'basic_2component'
-
-  def potential_fn(x, y):
-    return 0.5 * (x ** 2 + y ** 2)
-
-  potential_fn_1 = potential_fn
-  potential_fn_2 = potential_fn
-
-  coupling = {
-      'g_1' : 1,
-      'g_2' : 1,
-      'g_12' : 0
-      }
-
-
 class SimulateOnce(BasicConfig):
   name = 'simonce'
   coupling = 0.5
@@ -149,8 +136,58 @@ class OpticalLattice(BasicConfig):
     return (x ** 2) / ( 2 + 12 * (math.sin(4 * x) ** 2) )
 
 
+class BasicTwoComponentConfig:
+
+  """ Basic Configuration """
+
+  # ----------------- General --------------- #
+  name = 'basic2'  # name of simulation/experiment/data/model; handle to everything
+  _type = 'two-component'
+  path_to_results = 'results'
+  two_component = True
+
+  # -------- Trotter Suzuki ----------------- #
+  dim = 300  # dimensions of grid
+  radius = 20.  # radius of particle?
+  time_step = 1e-2
+  iterations = 20000  # number of iterations of evolution
+
+  sub_sample_counts = [ 200, 400, 600, 800 ]
+
+  # -------- Approximation ------------------ #
+  model = GPApproximation  # approximating model
+  sub_sample_count = 250  # number of datapoints to train the mdoel
+
+
+class TwoComponentConfig(BasicTwoComponentConfig):
+  # type
+  _type = 'two-component'
+  # name
+  name = '2comp'
+  # coupling coefficients
+  g11 = 103
+  g12 = 100
+  g22 = 97
+  couplings = [ g11, g12, g22 ]
+  coupling_vars = np.random.uniform(95, 105, (300, 3))
+  # lattice
+  dim, radius = 300, 20.
+
+  # potential
+  def potential_fn(x,y):
+    return 0.5*(x**2)+ 24 * (math.cos(x))**2
+
+  # iterations
+  iterations = 20000
+
+  # time steps
+  time_step = 1e-2
+
+
 # [[.]] list of configurations
 configs = {
-    BasicConfig.name : BasicConfig,
-    OpticalLattice.name : OpticalLattice
-    }
+  BasicConfig.name : BasicConfig,
+  OpticalLattice.name : OpticalLattice,
+  BasicTwoComponentConfig.name : BasicTwoComponentConfig,
+  TwoComponentConfig.name : TwoComponentConfig
+  }

@@ -23,6 +23,28 @@ def build_visuals_from_file(filename, save_to_file=False, overlay=False):
     data = read_data_from_file(filename)
     plot_fn(data)
 
+"""
+def sample_data_from_file2(filename, n):
+  n = 9 if not n else n
+  df = pd.read_csv(filename)
+  x = df.x.unique()
+"""
+
+def build_visuals_from_file2(filename, save_to_file=False, overlay=False):
+
+  if 'sim.csv' in filename:
+    df = pd.read_csv(filename)
+    g11 = df.g11.unique()[0]
+    g12 = df.g12.unique()[0]
+    g22 = df.g22.unique()[0]
+    plots = [ go.Scatter(x=df.x, y=df.psi1, name='psi1'),
+        go.Scatter(x=df.x, y=df.psi2, name='psi2') ]
+        
+    title=f'g11 : {g11}, g12 : {g12}, g22 : {g22}'
+    fig = go.Figure(data=plots)
+    fig = plotly_layout_setup(fig, title=title)
+    fig.show()
+
 
 def plotly_plot_wave_fn(g, x, psi):
   fig = go.Figure(data=go.Scatter(x=x, y=psi))
@@ -42,7 +64,7 @@ def plotly_layout_setup(fig, title):
   return fig
 
 
-def make_prediction_plot(model, sample, colors):
+def make_prediction_plot(model, sample, colors=('#1f77b4', '#d62728')):
   # run sample through model
   y_pred, sigma = model.predict(sample[['x', 'g']])
   g = sample.g.unique()[0]

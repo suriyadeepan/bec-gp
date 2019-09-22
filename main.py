@@ -1,9 +1,12 @@
 from neuralbec.simulation import VariableCouplingBec, Bec
+from neuralbec.simulation import TwoComponentBec
+from neuralbec.simulation import VariableCouplingTwoComponentBec
 from neuralbec.visualize import build_visuals_from_file
+from neuralbec.visualize import build_visuals_from_file2
 from neuralbec.visualize import render_prediction_plot
 from neuralbec.visualize import make_prediction_plot
 from neuralbec.visualize import plot_predictions_overlay
-from neuralbec.approximations import fit, make_testset
+from neuralbec.approximations import fit, make_testset, fit2
 from neuralbec.colors import color_list
 
 from config import configs, setup
@@ -54,16 +57,16 @@ parser.add_argument('--save-to-file', default=False, action='store_true',
     help='Save figures to file')
 parser.add_argument('--overlay', default=False, action='store_true',
     help='Visualize results')
+parser.add_argument('--two-component', default=False, action='store_true',
+    help='Working on 2 component systems')
+parser.add_argument('--simulates', default=False, action='store_true',
+    help='Run many simulations')
 # ...
 # parse command-line arguments
 args = parser.parse_args()
 
 
-if __name__ == '__main__':
-  # .
-  # read configuration
-  config = configs[args.config]
-  setup(config)  # init directories
+def main_single_component():
   # ..
   #   [[[[[ MODE ]]]]]
   # ...
@@ -129,3 +132,24 @@ if __name__ == '__main__':
       for f in files:
         build_visuals_from_file(
             os.path.join(path, f), args.save_to_file, args.overlay)
+
+
+def main_two_component():
+  if args.simulate and not args.couplings:
+    TwoComponentBec(config).save(config)
+  elif args.simulates and not args.couplings:
+    VariableCouplingTwoComponentBec(config).run().save(config)
+  elif args.approximate and not args.search:
+    model = fit2(config, args.ssc)
+  elif args.visualize:
+    build_visuals_from_file2(
+        os.path.join(config.path_to_results, config.name, '2', 'sim.csv')
+        )
+
+
+config = configs[args.config]
+setup(config)  # init directories
+if not args.two_component:
+  main_single_component()
+else:
+  main_two_component()
