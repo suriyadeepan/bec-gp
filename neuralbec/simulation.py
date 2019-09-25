@@ -222,15 +222,16 @@ class OneDimensionalTwoComponentData(SimulatedData):
     path = os.path.join(self.path, filename)  # .path_to_results, config.name, '2', filename)
     self.df.to_csv(path, encoding='utf-8')
     print(f'Simulation results saved to [{path}]')
+    return self.df
 
 
 class TwoComponentBec(Simulation):
 
-  def __new__(self, config):
+  def __new__(self, config, couplings=None):
     data = OneDimensionalTwoComponentData(
         os.path.join(config.path_to_results, config.name, '2')
         )
-    data.add(one_dimensional_bec_2_component(config))
+    data.add(one_dimensional_bec_2_component(config, couplings))
     return data
 
 

@@ -169,13 +169,17 @@ class TwoComponentConfig(BasicTwoComponentConfig):
   g12 = 100
   g22 = 97
   couplings = [ g11, g12, g22 ]
-  coupling_vars = np.random.uniform(95, 105, (300, 3))
+  coupling_vars = np.stack(
+      [np.random.uniform(90, 115, (600)),
+      np.random.uniform(88, 113, (600)),
+      np.random.uniform(85, 110, (600))]
+      ).transpose()
   # lattice
   dim, radius = 300, 20.
 
   # potential
-  def potential_fn(x,y):
-    return 0.5*(x**2)+ 24 * (math.cos(x))**2
+  def potential_fn(x, y):
+    return 0.5 * (x ** 2) + 24 * (math.cos(x)) ** 2
 
   # iterations
   iterations = 20000

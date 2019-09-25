@@ -4,6 +4,7 @@ from neuralbec.simulation import VariableCouplingTwoComponentBec
 from neuralbec.visualize import build_visuals_from_file
 from neuralbec.visualize import build_visuals_from_file2
 from neuralbec.visualize import render_prediction_plot
+from neuralbec.visualize import render_prediction_plot2
 from neuralbec.visualize import make_prediction_plot
 from neuralbec.visualize import plot_predictions_overlay
 from neuralbec.approximations import fit, make_testset, fit2
@@ -11,10 +12,6 @@ from neuralbec.colors import color_list
 
 from config import configs, setup
 
-from pprint import PrettyPrinter
-pp = PrettyPrinter(indent=4)
-
-import logging
 import argparse
 import warnings
 
@@ -95,7 +92,7 @@ def main_single_component():
   #   Prediction
   elif args.predict and args.model:
     assert args.couplings or args.coupling
-    
+
     couplings = [args.coupling] if args.coupling else None
     if couplings is None:
       couplings = [ float(g) for g in args.couplings.replace(' ', '').split(',') ]
@@ -104,7 +101,7 @@ def main_single_component():
       sample = Bec(config, coupling).df
       model = config.model(config=config).load(
           os.path.join(config.path_to_results, config.name, args.model))
-      data.extend(make_prediction_plot(model, sample, (colors[i], colors[i+1])))
+      data.extend(make_prediction_plot(model, sample, (colors[i], colors[i + 1])))
       if not args.overlay:
         render_prediction_plot(model, sample)
 
@@ -145,6 +142,27 @@ def main_two_component():
     build_visuals_from_file2(
         os.path.join(config.path_to_results, config.name, '2', 'sim.csv')
         )
+  elif args.predict and args.model:
+    couplings = config.couplings
+    if args.couplings is not None:
+      couplings = [ float(g) for g in args.couplings.replace(' ', '').split(',') ]
+      assert len(couplings) == 3
+    # simulate
+    path = os.path.join(config.path_to_results, config.name, '2')
+    filename = 'sim_prediction.csv'
+    sample = TwoComponentBec(config, couplings).save(config, filename)
+    # load model from file
+    model = config.model(config=config).load(
+        os.path.join(path, args.model))
+    render_prediction_plot2(model, sample)
+    """
+    data.extend(make_prediction_plot(model, sample, (colors[i], colors[i+1])))
+    if not args.overlay:
+      render_prediction_plot(model, sample)
+
+    if args.overlay:
+      plot_predictions_overlay(data)
+    """
 
 
 config = configs[args.config]

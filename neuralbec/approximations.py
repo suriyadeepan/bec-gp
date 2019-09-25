@@ -11,8 +11,8 @@ import os
 class GPApproximation:
 
   def __init__(self, config=None):
-    #kernel = C(1.0, (1e-3, 1e3)) * RBF([5, 5], (1e-2, 1e2))
-    kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
+    kernel = C(1.0, (1e-3, 1e3)) * RBF([5, 5, 5, 5], (1e-2, 1e2))
+    # kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
     self.gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=15)
     self.config = config
 
@@ -25,7 +25,6 @@ class GPApproximation:
 
   def predict(self, X):
     out = self.gp.predict(X, return_std=True)
-    print('variance : ', out[-1].mean()**2)
     return out
 
   def save(self, filename=None):
@@ -96,4 +95,4 @@ def fit2(config, ssc, testset=None):
       os.path.join(config.path_to_results, config.name, '2', f'ssc={ssc}.model')
       )
 
-  return model 
+  return model
