@@ -1,13 +1,18 @@
 from neuralbec.simulation import VariableCouplingBec, Bec
 from neuralbec.simulation import TwoComponentBec
+from neuralbec.simulation import TwoDimensionalBec
 from neuralbec.simulation import VariableCouplingTwoComponentBec
+from neuralbec.simulation import VariableCouplingTwoDimBec
 from neuralbec.visualize import build_visuals_from_file
 from neuralbec.visualize import build_visuals_from_file2
+from neuralbec.visualize import build_2d_visuals_from_file
 from neuralbec.visualize import render_prediction_plot
 from neuralbec.visualize import render_prediction_plot2
+from neuralbec.visualize import render_prediction_plot2d
 from neuralbec.visualize import make_prediction_plot
 from neuralbec.visualize import plot_predictions_overlay
-from neuralbec.approximations import fit, make_testset, fit2
+from neuralbec.approximations import make_testset
+from neuralbec.approximations import fit, fit2, fit2d
 from neuralbec.colors import color_list
 
 from config import configs, setup
@@ -56,6 +61,8 @@ parser.add_argument('--overlay', default=False, action='store_true',
     help='Visualize results')
 parser.add_argument('--two-component', default=False, action='store_true',
     help='Working on 2 component systems')
+parser.add_argument('--two-dim', default=False, action='store_true',
+    help='Working on 2 dimensional systems')
 parser.add_argument('--simulates', default=False, action='store_true',
     help='Run many simulations')
 # ...
@@ -165,9 +172,34 @@ def main_two_component():
     """
 
 
+def main_two_dim():
+  if args.simulate and args.coupling:
+    TwoDimensionalBec(config, args.coupling).save(config)
+  elif args.simulate and not args.coupling:
+    VariableCouplingTwoDimBec(config).run().save(config)
+  elif args.visualize:
+    path = os.path.join(config.path_to_results, config.name)
+    files = os.listdir(path)
+    for f in files:
+      build_2d_visuals_from_file(os.path.join(path, f), args.save_to_file)
+  elif args.approximate and not args.search:
+    model = fit2d(config, args.ssc)
+  elif args.predict and args.model:
+    coupling = config.coupling if not args.coupling else args.coupling
+    # simulate
+    path = os.path.join(config.path_to_results, config.name)
+    filename = 'sim_prediction.csv'
+    sample = TwoDimensionalBec(config, coupling).save(config, filename)
+    # load model from file
+    model = config.model(config=config).load(os.path.join(path, args.model))
+    render_prediction_plot2d(model, sample)
+
+
 config = configs[args.config]
 setup(config)  # init directories
-if not args.two_component:
+if not args.two_component and not args.two_dim:
   main_single_component()
-else:
+elif args.two_component:
   main_two_component()
+elif args.two_dim:
+  main_two_dim()

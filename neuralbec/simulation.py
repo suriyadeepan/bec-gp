@@ -14,6 +14,51 @@ class SimulatedData:
     pass
 
 
+class TwoDimensionalData(SimulatedData):
+
+  def __init__(self, path):
+    self.path = path
+    self.df = utils.to_df({ 'x' : [], 'y' : [], 'psi' : [], 'g' : [] })
+
+  @property
+  def X(self):
+    return self.df.x
+
+  @property
+  def Y(self):
+    return self.df.y
+
+  @property
+  def psi(self):
+    return self.df.psi
+
+  @property
+  def g(self):
+    return self.df.g
+
+  def add(self, df):
+    # add df to data
+    self.df = self.df.append(df, ignore_index=True)
+
+  def load(self, filename='sim.csv'):
+    self.df = pd.read_csv(os.path.join(self.path, filename), index_col=0)
+    return self.df
+
+  def save(self, config, filename=None):
+    # check if there are more than one `g` value
+    g = self.df.g.unique()
+    if filename is None:
+      if len(g) == 1:  # figure out file name
+        filename = 'sim_g={}.csv'.format(g[0])
+      else:
+        filename = 'sim.csv'
+    # write to file
+    path = os.path.join(config.path_to_results, config.name, filename)
+    self.df.to_csv(path, encoding='utf-8')
+    print(f'Simulation results saved to [{path}]')
+    return self.df
+
+
 class OneDimensionalData(SimulatedData):
 
   def __init__(self, path):
@@ -52,6 +97,7 @@ class OneDimensionalData(SimulatedData):
     path = os.path.join(config.path_to_results, config.name, filename)
     self.df.to_csv(path, encoding='utf-8')
     print(f'Simulation results saved to [{path}]')
+    return self.df
 
   @property
   def stats(self):
@@ -81,6 +127,35 @@ class Bec(Simulation):
         )
     data.add(one_dimensional_bec(config, coupling=coupling))
     return data
+
+
+def two_dimensional_bec(config, coupling=None):
+  """Estimate Particle Density of 2-dimensional BEC system """
+  # resolve coupling
+  coupling = coupling if coupling else config.coupling
+  # Set up lattice
+  grid = ts.Lattice2D(config.dim, config.radius)
+  # initialize state
+  state = ts.GaussianState(grid, config.angular_momentum)
+  # create an harmonic potential
+  potential = ts.HarmonicPotential(grid, 1., 1. / np.sqrt(2.))
+  # build hamiltonian with coupling strength `g`
+  hamiltonian = ts.Hamiltonian(grid, potential, 1., coupling)
+  # setup solver
+  solver = ts.Solver(grid, state, hamiltonian, config.time_step)
+  # Evolve the system
+  solver.evolve(config.iterations, True)
+  # psi / psi_max
+  psi = state.get_particle_density()
+  # psi / psi_max
+  psi = psi / psi.max()
+
+  return utils.to_df({
+      'x' : np.array(grid.get_x_axis()),
+      'y' : np.array(grid.get_y_axis()),
+      'g' : coupling,
+      'psi' : psi
+      })
 
 
 def one_dimensional_bec(config, coupling=None, iterations=None):
@@ -218,7 +293,7 @@ class OneDimensionalTwoComponentData(SimulatedData):
     self.df = self.df.append(df, ignore_index=True)
 
   def save(self, config, filename='sim.csv'):
-    #path = os.path.join(config.path_to_results, config.name, '2', filename)
+    # path = os.path.join(config.path_to_results, config.name, '2', filename)
     path = os.path.join(self.path, filename)  # .path_to_results, config.name, '2', filename)
     self.df.to_csv(path, encoding='utf-8')
     print(f'Simulation results saved to [{path}]')
@@ -233,6 +308,38 @@ class TwoComponentBec(Simulation):
         )
     data.add(one_dimensional_bec_2_component(config, couplings))
     return data
+
+
+class TwoDimensionalBec(Simulation):
+
+  def __new__(self, config, coupling):
+    data = TwoDimensionalData(
+        os.path.join(config.path_to_results, config.name)
+        )
+    data.add(two_dimensional_bec(config, coupling=coupling))
+    return data
+
+
+class VariableCouplingTwoDimBec(Experiment):
+
+  def __init__(self, config, two_component=False):
+    # keep track of config
+    self.config = config
+    # data holder
+    self.data = TwoDimensionalData(
+        os.path.join(config.path_to_results, config.name)
+        )
+
+  def run(self, coupling_vars=None):
+    if coupling_vars is None:
+      coupling_vars = self.config.coupling_vars
+    for g in tqdm(coupling_vars):
+      # run a simulation
+      sdata = two_dimensional_bec(self.config, coupling=g)
+      # save data
+      self.data.add(sdata)
+
+    return self.data
 
 
 class VariableCouplingTwoComponentBec(Experiment):

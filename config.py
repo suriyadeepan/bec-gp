@@ -35,8 +35,6 @@ class BasicConfig:
   radius = 24  # radius of particle?
   angular_momentum = 1
   time_step = 1e-4
-  #coupling = 200.045  # coupling coefficient (g)
-  #coupling = 10.  # coupling coefficient (g)
   iterations = 10000  # number of iterations of evolution
   # coupling_vars = [0.5, 1, 10, 90, 130, 200, 240, 300]
   coupling_vars = np.random.uniform(0, 150, (500,))  # variable `g` values
@@ -188,10 +186,48 @@ class TwoComponentConfig(BasicTwoComponentConfig):
   time_step = 1e-2
 
 
+class BasicTwoDimensionalConfig:
+
+  """ Basic 2D Configuration """
+
+  # ----------------- General --------------- #
+  name = 'basic2d'  # name of simulation/experiment/data/model; handle to everything
+  _type = 'two-dim'
+  path_to_results = 'results'
+  two_component = False
+  # 256, 15, 0.05, 1e-3, 500., lambda x, y : 0.5 * (x**2 + y**2), 8000)
+  # -------- Trotter Suzuki ----------------- #
+  dim = 256  # dimensions of grid [ 256 x 256 ]
+  radius = 15  # radius of particle?
+  angular_momentum = 0.05
+  time_step = 1e-3
+  iterations = 10000  # number of iterations of evolution
+  coupling = 99.
+  coupling_vars = np.random.uniform(0., 500., (2,))  # variable `g` values
+
+  sub_sample_counts = [ 200, 400, 600, 800, 1000, 1500, 2000, 3000, 4000 ]
+
+  def wave_function(x, y):  # a working wave function
+    return np.exp(-0.5 * (x**2 + y**2)) / np.sqrt(np.pi)
+
+  def potential_fn(x, y):  # a working potential
+    return 0.5 * (x ** 2 + y ** 2)
+
+  # -------- Approximation ------------------ #
+  model = GPApproximation  # approximating model
+  sub_sample_count = 1500  # number of datapoints to train the mdoel
+
+
+class TwoDimConfig(BasicTwoDimensionalConfig):
+  name = '2dim'
+  coupling_vars = np.random.uniform(0., 50., (500,))  # variable `g` values
+
+
 # [[.]] list of configurations
 configs = {
   BasicConfig.name : BasicConfig,
   OpticalLattice.name : OpticalLattice,
   BasicTwoComponentConfig.name : BasicTwoComponentConfig,
-  TwoComponentConfig.name : TwoComponentConfig
+  TwoComponentConfig.name : TwoComponentConfig,
+  TwoDimConfig.name : TwoDimConfig,
   }

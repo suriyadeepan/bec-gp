@@ -1,5 +1,6 @@
 import pickle
 import logging
+import itertools
 
 import pandas as pd
 import numpy as np
@@ -68,5 +69,23 @@ def bell(mu, sigma, x):
   return psi
 
 
+def combinations(x, as_array=True):
+  if not as_array:
+    return [ p for p in itertools.product(x, repeat=2) ]
+
+  return np.array([ p for p in itertools.product(x, repeat=2) ])
+
+
 def to_df(ddict):
+  # check if 2D
+  if 'y' in ddict and len(ddict['y']) > 0:
+    c = combinations(ddict['x'])
+    assert c.shape == ( ddict['x'].shape[-1] ** 2, 2 )
+    # create Data frame
+    return pd.DataFrame({
+        'x' : c.T[0],
+        'y' : c.T[1],
+        'psi' : ddict['psi'].reshape(-1, ),
+        'g' : np.ones_like(c.T[0]) * ddict['g']
+    })
   return pd.DataFrame(ddict)

@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
-import os
-import pickle
+import math
 
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
@@ -33,6 +32,40 @@ def build_visuals_from_file2(filename, save_to_file=False, overlay=False):
     g22 = df.g22.unique()[0]
     plotly_plot_wave_fn2((g11, g12, g22), df.x, df.psi1, df.psi2)
   # elif 'sim_prediction.csv' in filename:
+
+
+def build_2d_visuals_from_file(filename, save_to_file=False):
+
+  if 'sim_g=' in filename:
+    df = pd.read_csv(filename)
+    assert len(df.g.unique()) == 1
+    d = int(math.sqrt(df.psi.shape[0]))
+    plotly_plot_2d_wave_fn(df.g.iloc[0], x=df.x.unique(), y=df.y.unique(),
+        psi=df.psi.to_numpy().reshape(d, d))
+
+
+def plotly_plot_2d_wave_fn(coupling, x, y, psi):
+  fig = go.Figure(data=go.Heatmap(z=psi, x=x, y=y))
+  fig.layout.title.text = f'g = {coupling}'
+  fig.update_layout(width=850, height=720)
+  fig.show()
+
+
+def render_prediction_plot2d(model, sample):
+  fig = make_subplots(rows=1, cols=2, start_cell="top-left",
+      subplot_titles=['Ground Truth', 'Prediction'])
+  d = int(math.sqrt(sample.psi.shape[0]))
+  ground_truth = go.Heatmap(x=sample.x.unique(), y=sample.y.unique(),
+      z=sample.psi.to_numpy().reshape(d, d))
+  # model prediction
+  y_hat, sigma = model.predict(sample[['x', 'y', 'g']])
+  y_hat = y_hat / y_hat.max()
+  prediction = go.Heatmap(x=sample.x.unique(), y=sample.y.unique(),
+      z=y_hat.reshape(d, d))  # , showlegend=False)
+  fig.add_trace(ground_truth, row=1, col=1)
+  fig.add_trace(prediction, row=1, col=2)
+  fig.update_layout(width=1250, height=600)
+  fig.show()
 
 
 def plotly_plot_wave_fn2(couplings, x, psi1, psi2):

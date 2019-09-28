@@ -3,6 +3,7 @@ from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 
 from neuralbec.simulation import OneDimensionalData
 from neuralbec.simulation import OneDimensionalTwoComponentData
+from neuralbec.simulation import TwoDimensionalData
 
 import pickle
 import os
@@ -11,7 +12,13 @@ import os
 class GPApproximation:
 
   def __init__(self, config=None):
-    kernel = C(1.0, (1e-3, 1e3)) * RBF([5, 5, 5, 5], (1e-2, 1e2))
+    if config._type == 'one-component':
+      kernel = C(1.0, (1e-3, 1e3)) * RBF([5, 5], (1e-2, 1e2))
+    elif config._type == 'two-component':
+      kernel = C(1.0, (1e-3, 1e3)) * RBF([5, 5, 5, 5], (1e-2, 1e2))
+    elif config._type == 'two-dim':
+      kernel = C(1.0, (1e-3, 1e3)) * RBF([5, 5, 5], (1e-2, 1e2))
+
     # kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
     self.gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=15)
     self.config = config
@@ -67,9 +74,10 @@ def fit(config, ssc, testset=None):
 
 
 def make_testset(config, ssc):
-  df =  OneDimensionalData(
-      os.path.join(config.path_to_results, config.name)
-      ).load()
+  D = OneDimensionalData
+  if config._type == 'twod':
+    D = TwoDimensionalData
+  df = D(os.path.join(config.path_to_results, config.name)).load()
   assert len(df) > 0
   return df.sample(ssc)
 
@@ -93,6 +101,30 @@ def fit2(config, ssc, testset=None):
   # write model to disk
   model.save(
       os.path.join(config.path_to_results, config.name, '2', f'ssc={ssc}.model')
+      )
+
+  return model
+
+
+def fit2d(config, ssc, testset=None):
+  # read data from file
+  df = TwoDimensionalData(
+        os.path.join(config.path_to_results, config.name)
+        ).load()
+  assert len(df) > 0
+  dataset = df.sample(ssc * 2)
+  trainset = dataset[:ssc]
+  testset = dataset[ssc:] if testset is None else testset
+  # instantiate model
+  model = config.model(config=config)
+  # fit model
+  model.fit(trainset[['x', 'y', 'g']], trainset.psi)
+  # evaluate on test set
+  error = model.evaluate(testset[['x', 'y', 'g']], testset.psi)
+  print(f'Error : [ {model.error} ]')
+  # write model to disk
+  model.save(
+      os.path.join(config.path_to_results, config.name, f'ssc={ssc}.model')
       )
 
   return model
