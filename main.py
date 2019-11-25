@@ -1,8 +1,4 @@
-from neuralbec.simulation import VariableCouplingBec, Bec
-from neuralbec.simulation import TwoComponentBec
-from neuralbec.simulation import TwoDimensionalBec
-from neuralbec.simulation import VariableCouplingTwoComponentBec
-from neuralbec.simulation import VariableCouplingTwoDimBec
+from neuralbec.simulation import *
 from neuralbec.visualize import build_visuals_from_file
 from neuralbec.visualize import build_visuals_from_file2
 from neuralbec.visualize import build_2d_visuals_from_file
@@ -63,6 +59,8 @@ parser.add_argument('--two-component', default=False, action='store_true',
     help='Working on 2 component systems')
 parser.add_argument('--two-dim', default=False, action='store_true',
     help='Working on 2 dimensional systems')
+parser.add_argument('--potential-change', default=False, action='store_true',
+    help='Potential change Experiment')
 parser.add_argument('--simulates', default=False, action='store_true',
     help='Run many simulations')
 # ...
@@ -195,11 +193,22 @@ def main_two_dim():
     render_prediction_plot2d(model, sample)
 
 
+def main_pot_change():
+  if args.simulate:
+    PotentialChangeExperiment(config, args.coupling).save(config)
+
+
 config = configs[args.config]
 setup(config)  # init directories
-if not args.two_component and not args.two_dim:
+if not args.two_component and not args.two_dim and not args.potential_change:
+  print('Single Component BEC')
   main_single_component()
 elif args.two_component:
+  print('2 Component BEC')
   main_two_component()
 elif args.two_dim:
+  print('2D BEC')
   main_two_dim()
+elif args.potential_change:
+  print('Potential Change')
+  main_pot_change()

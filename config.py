@@ -4,6 +4,7 @@ import os
 import numpy as np
 
 from neuralbec.approximations import GPApproximation
+from neuralbec.potentials import *
 
 
 def setup(config):
@@ -223,6 +224,13 @@ class TwoDimConfig(BasicTwoDimensionalConfig):
   coupling_vars = np.random.uniform(0., 50., (500,))  # variable `g` values
 
 
+class PotentialChange(BasicConfig):  # demo of using your own config
+  name = 'potchange'  # just change what needs to be changed
+  coupling = 1
+  _type = 'potential-change'
+  potential_fn = gaussian_disorder_potential(sigma_d=10.)
+
+
 # [[.]] list of configurations
 configs = {
   BasicConfig.name : BasicConfig,
@@ -230,4 +238,5 @@ configs = {
   BasicTwoComponentConfig.name : BasicTwoComponentConfig,
   TwoComponentConfig.name : TwoComponentConfig,
   TwoDimConfig.name : TwoDimConfig,
+  PotentialChange.name : PotentialChange
   }

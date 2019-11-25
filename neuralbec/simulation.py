@@ -129,6 +129,62 @@ class Bec(Simulation):
     return data
 
 
+class PotentialChangeData(SimulatedData):
+
+  def __init__(self, path):
+    self.path = path
+    self.df = pd.DataFrame({ 'x' : [], 'psi' : [], 'u' : [] })
+
+  @property
+  def X(self):
+    return self.df.x
+
+  @property
+  def psi(self):
+    return self.df.psi
+
+  @property
+  def u(self):
+    return self.df.u
+
+  def add(self, df):
+    # add df to data
+    self.df = self.df.append(df, ignore_index=True)
+
+  def load(self, filename='sim.csv'):
+    self.df = pd.read_csv(os.path.join(self.path, filename), index_col=0)
+    return self.df
+
+  def save(self, config, filename=None):
+    filename = 'sim.csv'
+    path = os.path.join(config.path_to_results, config.name, filename)
+    self.df.to_csv(path, encoding='utf-8')
+    print(f'Simulation results saved to [{path}]')
+    return self.df
+
+  @property
+  def stats(self):
+    # unique simulations
+    return {
+        '#Datapoints'  : len(self.df),
+        'uMin' : self.df.u.min(),
+        'uMax' : self.df.u.max(),
+        }
+
+  def __repr__(self):
+    return str(self.stats)
+
+
+class PotentialChangeExperiment(Simulation):
+
+  def __new__(self, config, potential_fn):
+    data = PotentialChangeData(
+        os.path.join(config.path_to_results, config.name)
+        )
+    data.add(potential_change_bec(config, potential_fn))
+    return data
+
+
 def two_dimensional_bec(config, coupling=None):
   """Estimate Particle Density of 2-dimensional BEC system """
   # resolve coupling
@@ -362,3 +418,37 @@ class VariableCouplingTwoComponentBec(Experiment):
       self.data.add(sdata)
 
     return self.data
+
+
+def potential_change_bec(config, potential_fn=None, iterations=None):
+  # get coupling strength
+  coupling = config.coupling
+  # Set up lattice
+  grid = ts.Lattice1D(config.dim, config.radius)
+  # initialize state
+  state = ts.State(grid, config.angular_momentum)
+  state.init_state(config.wave_function)
+  # init potential
+  potential = ts.Potential(grid)
+  # get potential_fn
+  if potential_fn is None:
+    potential_fn = config.potential_fn
+  potential.init_potential(potential_fn)
+  # build hamiltonian with coupling strength `g` and potential `u(.)`
+  hamiltonian = ts.Hamiltonian(grid, potential, 1., coupling)
+  # setup solver
+  solver = ts.Solver(grid, state, hamiltonian, config.time_step)
+  iterations = config.iterations if not iterations else iterations
+  # Evolve the system
+  solver.evolve(iterations, False)
+  # Compare the calculated wave functions w.r.t. groundstate function
+  # psi = np.sqrt(state.get_particle_density()[0])
+  psi = state.get_particle_density()[0]
+  # psi / psi_max
+  psi = psi / max(psi)
+  # save data
+  return utils.to_df({
+    'x' : grid.get_x_axis(),
+    'u' : np.array([ config.potential_fn(x, None) for x in grid.get_x_axis() ]),
+    'psi' : psi
+    })
