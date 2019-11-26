@@ -4,7 +4,6 @@ import itertools
 
 import pandas as pd
 import numpy as np
-import torch.distributions as dist
 
 
 def save(d, filename):

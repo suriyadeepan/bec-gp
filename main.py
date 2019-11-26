@@ -11,6 +11,10 @@ from neuralbec.approximations import make_testset
 from neuralbec.approximations import fit, fit2, fit2d
 from neuralbec.colors import color_list
 
+import pandas as pd
+import matplotlib.pyplot as plt
+plt.style.use('ggplot')
+
 from config import configs, setup
 
 import argparse
@@ -196,7 +200,7 @@ def main_two_dim():
 def main_pot_change():
   if args.simulate:
     PotentialChangeExperiment(config, args.coupling).save(config)
-
+ 
 
 config = configs[args.config]
 setup(config)  # init directories
