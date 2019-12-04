@@ -15,6 +15,10 @@ def gaussian_disorder_potential(sigma_d=0.39, low=-20, high=20, step=0.002):
   return gaussian_disorder_fn
 
 
+def subexp(expon):
+    return np.power(abs(np.log(np.random.uniform())),expon)
+
+ 
 def generatepot(style, param, bins):
   """0=step,1=linear,2=fourier; 0-1 "jaggedness" scale"""
   cosval = np.cos([[np.pi*i*j/bins for i in range(1,bins)] for j in range(1,bins//2)])
@@ -45,10 +49,13 @@ def generatepot(style, param, bins):
   return poten
 
 
-def get_potential_fn(jaggedness, X, style=0):
+def get_potential_fn(style, jaggedness, X=None):
+  X = np.arange(-11.9765625, 12., 0.046875)
+  style = { 'step' : 0, 'linear' : 1, 'fourier' : 2 }[style]
   poten = generatepot(style, jaggedness, 1 + X.shape[0])
   assert X.shape[0] == len(poten), (X.shape[0], len(poten))
   poten_dict = { xi : pi for xi, pi in zip(X, poten) }
+
   def fn(x, y):
     return poten_dict[x]
 

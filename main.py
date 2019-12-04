@@ -200,6 +200,8 @@ def main_two_dim():
 def main_pot_change():
   if args.simulate:
     PotentialChangeExperiment(config, args.coupling).save(config)
+  elif args.simulates:
+    potential_change_experiment(config)
  
 
 config = configs[args.config]

@@ -224,11 +224,31 @@ class TwoDimConfig(BasicTwoDimensionalConfig):
   coupling_vars = np.random.uniform(0., 50., (500,))  # variable `g` values
 
 
-class PotentialChange(BasicConfig):  # demo of using your own config
-  name = 'potchange'  # just change what needs to be changed
+class StepPotentialChange(BasicConfig):  # demo of using your own config
+  name = 'steppotchange'  # just change what needs to be changed
   coupling = 1
   _type = 'potential-change'
-  potential_fn = gaussian_disorder_potential(sigma_d=10.)
+  potential_fn = get_potential_fn('step', 0.1)
+  potential_fns = [ get_potential_fn('step', j)
+      for j in np.random.uniform(0., 0.9, (500,)) ]
+
+
+class LinearPotentialChange(BasicConfig):  # demo of using your own config
+  name = 'linearpotchange'  # just change what needs to be changed
+  coupling = 1
+  _type = 'potential-change'
+  potential_fn = get_potential_fn('linear', 0.1)
+  potential_fns = [ get_potential_fn('linear', j)
+      for j in np.random.uniform(0., 0.9, (500,)) ]
+
+
+class FourierPotentialChange(BasicConfig):  # demo of using your own config
+  name = 'fourierpotchange'  # just change what needs to be changed
+  coupling = 1
+  _type = 'potential-change'
+  potential_fn = get_potential_fn('fourier', 0.1)
+  potential_fns = [ get_potential_fn('fourier', j)
+      for j in np.random.uniform(0., 0.9, (500,)) ]
 
 
 # [[.]] list of configurations
@@ -238,5 +258,7 @@ configs = {
   BasicTwoComponentConfig.name : BasicTwoComponentConfig,
   TwoComponentConfig.name : TwoComponentConfig,
   TwoDimConfig.name : TwoDimConfig,
-  PotentialChange.name : PotentialChange
+  StepPotentialChange.name : StepPotentialChange,
+  LinearPotentialChange.name : LinearPotentialChange,
+  FourierPotentialChange.name : FourierPotentialChange
   }

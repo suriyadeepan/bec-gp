@@ -449,6 +449,17 @@ def potential_change_bec(config, potential_fn=None, iterations=None):
   # save data
   return utils.to_df({
     'x' : grid.get_x_axis(),
-    'u' : np.array([ config.potential_fn(x, None) for x in grid.get_x_axis() ]),
+    'u' : np.array([ potential_fn(x, None) for x in grid.get_x_axis() ]),
     'psi' : psi
     })
+
+
+def potential_change_experiment(config):
+  """Run simulations based on multiple arbitrary potentials"""
+  df = pd.DataFrame()
+  for i, fn in enumerate(tqdm(config.potential_fns)):
+    data = potential_change_bec(config, fn)
+    data['i'] = np.array(len(data['x']) * [ i ])
+    df = df.append(data, ignore_index=True)
+  filepath = os.path.join(config.path_to_results, config.name, 'sim.csv')
+  df.to_csv(filepath, encoding='utf-8')
