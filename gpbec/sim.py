@@ -22,7 +22,10 @@ class Simulator:
     self.params = params
     self.inputs = inputs
 
-  def __call__(self, proposals):
+  def __call__(self, proposals=None):
+    # check if proposals is None
+    if proposals is None:
+      proposals = self.generate_proposals()
     results = {}
     for proposal in proposals:
       print(proposal)
@@ -47,8 +50,3 @@ class Simulator:
     #  generate proposals
     self.proposals = utils.generate_proposals(self.inputs)
     return self.proposals
-
-  def simulate(self):
-    # generate proposals
-    proposals = self.generate_proposals()
-    return self(proposals)
