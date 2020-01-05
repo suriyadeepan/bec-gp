@@ -7,5 +7,12 @@ if __name__ == '__main__':
   # make params
   params = get_params(g=10)
   # run simulation
-  sim = Simulator(params, inputs={ 'g' : np.random.uniform(0, 10, (100,)) })
-  out = sim()
+  inputs={ 'g' : np.random.uniform(0, 10, (100,)) }
+  # create a simulator
+  sim = Simulator(params, inputs)
+  # create a learning machine
+  lm = LearningMachine(inputs)
+  # fit on simulated data
+  done = False
+  while not done:
+    simdata = sim(inputs)

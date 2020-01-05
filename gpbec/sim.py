@@ -2,14 +2,16 @@ from gpbec import utils
 from gpbec.cache import cache, in_cache
 from gpbec.utils import sim1c
 
+from tqdm import tqdm
+
 
 class Simulator:
 
   def __init__(self, params, inputs):
     """Simulator
 
-    Parameters
-    ----------
+    Args
+    ----
     params : (dict) Dictionary of simulation parameters
     inputs : (dict) Experimental (variable) inputs to simulation
 
@@ -27,8 +29,10 @@ class Simulator:
     if proposals is None:
       proposals = self.generate_proposals()
     results = {}
-    for proposal in proposals:
-      print(proposal)
+    pbar = tqdm(proposals)
+    for proposal in pbar:
+      # set proposal info in tqdm progress bar
+      pbar.set_description(f'{proposal}')
       # make proposal (dict) hashable
       key = utils.freeze(proposal)
       # resolve proposal to params
