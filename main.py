@@ -1,12 +1,5 @@
 from neuralbec.simulation import *
-from neuralbec.visualize import build_visuals_from_file
-from neuralbec.visualize import build_visuals_from_file2
-from neuralbec.visualize import build_2d_visuals_from_file
-from neuralbec.visualize import render_prediction_plot
-from neuralbec.visualize import render_prediction_plot2
-from neuralbec.visualize import render_prediction_plot2d
-from neuralbec.visualize import make_prediction_plot
-from neuralbec.visualize import plot_predictions_overlay
+from neuralbec.visualize import *
 from neuralbec.approximations import make_testset
 from neuralbec.approximations import fit, fit2, fit2d
 from neuralbec.colors import color_list
@@ -46,6 +39,7 @@ parser.add_argument('--couplings', type=str, default=None,
     help='Coupling Strengths')
 parser.add_argument('--approximate', default=False, action='store_true',
     help='Create approximation on simulated data')
+parser.add_argument('--sampling-method', type=str, default=None, help='Sub-sampling method')
 parser.add_argument('--ssc', type=int, default=250,
     help='(Subsample Count) Number of samples for fitting model')
 parser.add_argument('--search', default=False, action='store_true',
@@ -55,8 +49,8 @@ parser.add_argument('--predict', default=False, action='store_true',
 parser.add_argument('--model', type=str, default=None, help='Saved model file')
 parser.add_argument('--visualize', default=False, action='store_true',
     help='Visualize results')
-parser.add_argument('--save-to-file', default=False, action='store_true',
-    help='Save figures to file')
+parser.add_argument('--save-to-file', type=str, default=None,
+    help='Filename to save graph to')
 parser.add_argument('--overlay', default=False, action='store_true',
     help='Visualize results')
 parser.add_argument('--two-component', default=False, action='store_true',
@@ -90,13 +84,13 @@ def main_single_component():
   # ...
   #   Fit a model on simulated data
   elif args.approximate and not args.search:
-    model = fit(config, args.ssc)
+    model = fit(config, args.ssc, sampling_method=args.sampling_method)
   # ...
   #   Hyperparameter Search
   elif args.approximate and args.search:
     testset = make_testset(config, args.ssc)
     for ssc in config.sub_sample_counts:
-      fit(config, ssc, testset=testset)
+      fit(config, ssc, testset=testset, sampling_method=args.sampling_method)
   # ...
   #   Prediction
   elif args.predict and args.model:
@@ -112,10 +106,10 @@ def main_single_component():
           os.path.join(config.path_to_results, config.name, args.model))
       data.extend(make_prediction_plot(model, sample, (colors[i], colors[i + 1])))
       if not args.overlay:
-        render_prediction_plot(model, sample)
+        render_prediction_plot(model, sample, save_to_file=args.save_to_file)
 
     if args.overlay:
-      plot_predictions_overlay(data)
+      plot_predictions_overlay(data, save_to_file=args.save_to_file)
 
   # ...
   #   **** >> Visualize **** >>
@@ -163,15 +157,15 @@ def main_two_component():
     # load model from file
     model = config.model(config=config).load(
         os.path.join(path, args.model))
-    render_prediction_plot2(model, sample)
-    """
-    data.extend(make_prediction_plot(model, sample, (colors[i], colors[i+1])))
     if not args.overlay:
-      render_prediction_plot(model, sample)
-
-    if args.overlay:
-      plot_predictions_overlay(data)
-    """
+      render_prediction_plot2(model, sample, save_to_file=args.save_to_file)
+    else:
+      render_prediction_plot2_overlayed(model, sample, save_to_file=args.save_to_file)
+    #data.extend(make_prediction_plot(model, sample, (colors[i], colors[i+1])))
+    #if not args.overlay:
+    #  render_prediction_plot(model, sample, save_to_file=args.save_to_file)
+    #if args.overlay:
+    #  plot_predictions_overlay(data)
 
 
 def main_two_dim():
@@ -199,6 +193,7 @@ def main_two_dim():
 
 def main_pot_change():
   if args.simulate:
+    print('pot change simulate')
     PotentialChangeExperiment(config, args.coupling).save(config)
   elif args.simulates:
     potential_change_experiment(config)

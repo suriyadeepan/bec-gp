@@ -126,6 +126,7 @@ class Bec(Simulation):
         os.path.join(config.path_to_results, config.name)
         )
     data.add(one_dimensional_bec(config, coupling=coupling))
+     
     return data
 
 
@@ -246,10 +247,15 @@ def one_dimensional_bec(config, coupling=None, iterations=None):
     })
 
 
-def one_dimensional_bec_2_component(config, couplings=None, iterations=None):
+def one_dimensional_bec_2_component(config, couplings=None, iterations=None, omega=None):
   # get coupling strength
-  couplings = couplings if couplings is not None else config.couplings
-  assert isinstance(couplings, type([69, ])) or isinstance(couplings, type(np.array([10.])))
+  if couplings is None:
+    couplings = config.couplings
+  # choose omega
+  if omega is None:
+    omega = config.omega
+  # couplings = couplings if couplings is not None else config.couplings
+  # assert isinstance(couplings, type([69, ])) or isinstance(couplings, type(np.array([10.])))
   # Set up lattice
   grid = ts.Lattice1D(config.dim, config.radius)
   # initialize state
@@ -265,7 +271,7 @@ def one_dimensional_bec_2_component(config, couplings=None, iterations=None):
   # build hamiltonian with coupling strength `g1`, `g2`, `g12`
   hamiltonian = ts.Hamiltonian2Component(grid, potential_1, potential_2,
     _coupling_a=couplings[0], coupling_ab=couplings[1],
-    _coupling_b=couplings[2], _omega_r=-1)
+    _coupling_b=couplings[2], _omega_r=omega)
   # setup solver
   # solver = ts.Solver(grid, state, hamiltonian, config.time_step)
   solver = ts.Solver(grid, state_1, hamiltonian, config.time_step, State2=state_2)
@@ -289,7 +295,8 @@ def one_dimensional_bec_2_component(config, couplings=None, iterations=None):
     'g12' : np.ones(psi1.shape) * couplings[1],
     'g22' : np.ones(psi1.shape) * couplings[2],
     'psi1' : psi1,
-    'psi2' : psi2
+    'psi2' : psi2,
+    'omega' : np.ones(psi1.shape) * omega
     })
 
 

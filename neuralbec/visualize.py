@@ -111,15 +111,15 @@ def make_prediction_plot(model, sample, colors=('#1f77b4', '#d62728')):
   c1, c2 = colors
   # plots
   data = []
-  if 'psi' in sample:
-    data.append(go.Scatter(x=sample.x, y=sample.psi,
-        line=dict(color=c2, dash='dot'), name=f'(g={g}) observations'))
   data.extend( [ go.Scatter(
     x=sample.x, y=y_pred, line=dict(color=c1), name=f'(g={g}) prediction'),
     go.Scatter(x=np.concatenate(
       [sample.x.to_numpy(), sample.x.to_numpy()[::-1]]), y=np.concatenate([y_pred - 1.9600 * sigma, ]), line=dict(color=c1), fill='tonexty', opacity=0.1, name=f'(g={g}) 95% confidence interval')] )
+  if 'psi' in sample:
+    data.append(go.Scatter(x=sample.x, y=sample.psi,
+        line=dict(color=c2, dash='dot'), name=f'(g={g}) observations'))
 
-  return data
+  return data, np.square(y_pred - sample.psi).sum() / len(sample.psi)
 
 
 def make_prediction_plot2(model, sample, colors=('#1f77b4', '#d62728')):
@@ -154,8 +154,13 @@ def make_prediction_plot2(model, sample, colors=('#1f77b4', '#d62728')):
   return (data1, data2)
 
 
-def render_prediction_plot(model, sample):
-  fig = go.Figure(make_prediction_plot(model, sample))
+def render_prediction_plot(model, sample, save_to_file=False):
+  data, error = make_prediction_plot(model, sample)
+  fig = go.Figure(data)
+  print(f'MSE : {error}')
+  if save_to_file:
+    fig.write_image(f'{save_to_file}.png', scale=4)
+    return
   fig.show()
 
 
@@ -165,8 +170,16 @@ def make_title2(sample):
   g22 = sample.g22.unique()[0]
   return f'g11 : {g11}, g12 : {g12}, g22 : {g22}'
 
+def render_prediction_plot2_overlayed(model, sample, save_to_file=False):
+  title = make_title2(sample)
+  data1, data2 = make_prediction_plot2(model, sample)
+  fig = go.Figure(data2)
+  if not save_to_file:
+    fig.show()
+    return
+  fig.write_image(f'{save_to_file}.png', height=750, width=1100, scale=4)
 
-def render_prediction_plot2(model, sample):
+def render_prediction_plot2(model, sample, save_to_file=False):
   title = make_title2(sample)
   data1, data2 = make_prediction_plot2(model, sample)
   assert len(data1) == 3 and len(data2) == 3
@@ -186,7 +199,10 @@ def render_prediction_plot2(model, sample):
     fig.add_trace(d, row=2, col=2)
     fig.update_xaxes(title_text='x', row=2, col=2)
     fig.update_yaxes(title_text='ψ₂', row=2, col=2)
-  fig.show()
+  if not save_to_file:
+    fig.show()
+    return
+  fig.write_image(f'{save_to_file}.png', scale=4, height=1000, width=1200)
 
 
 def read_data_from_file(filename):
@@ -241,7 +257,7 @@ def plot_multi_grid(data):
   fig.show()
 
 
-def plot_multi_overlay(data):
+def plot_multi_overlay(data, save_to_file=False):
   plots = []
   for g, df in data:
     plots.append(go.Scatter(x=df.x, y=df.y, name=f'g={g}'))
@@ -249,12 +265,18 @@ def plot_multi_overlay(data):
   fig.update_layout(legend=go.layout.Legend(x=0.9, y=0.95))
   fig.layout.yaxis.title.text = 'ψ / max(ψ)'
   fig.layout.xaxis.title.text = 'x'
-  fig.show()
+  if not save_to_file:
+    fig.show()
+    return
+  fig.write_image(f'{save_to_file}.png', scale=4)
 
 
-def plot_predictions_overlay(data):
+def plot_predictions_overlay(data, save_to_file=False):
   fig = go.Figure(data)
-  fig.update_layout(legend=go.layout.Legend(x=0.8, y=0.95))
+  # fig.update_layout(legend=go.layout.Legend(x=0.8, y=0.95))
   fig.layout.yaxis.title.text = 'ψ'
   fig.layout.xaxis.title.text = 'x'
-  fig.show()
+  if not save_to_file:
+    fig.show()
+    return
+  fig.write_image(f'{save_to_file}.png', scale=4, height=700, width=1050)

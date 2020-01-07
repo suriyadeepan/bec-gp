@@ -5,6 +5,8 @@ from neuralbec.simulation import OneDimensionalData
 from neuralbec.simulation import OneDimensionalTwoComponentData
 from neuralbec.simulation import TwoDimensionalData
 
+from neuralbec.sampling import weighted_sample, random_sample
+
 import pickle
 import os
 
@@ -13,10 +15,13 @@ class GPApproximation:
 
   def __init__(self, config=None):
     if config._type == 'one-component':
+      print('Choosing Kernel for one-component BEC')
       kernel = C(1.0, (1e-3, 1e3)) * RBF([5, 5], (1e-2, 1e2))
     elif config._type == 'two-component':
+      print('Choosing Kernel for two-component BEC')
       kernel = C(1.0, (1e-3, 1e3)) * RBF([5, 5, 5, 5], (1e-2, 1e2))
     elif config._type == 'two-dim':
+      print('Choosing Kernel for 2D BEC')
       kernel = C(1.0, (1e-3, 1e3)) * RBF([5, 5, 5], (1e-2, 1e2))
 
     # kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
@@ -50,13 +55,18 @@ class GPApproximation:
       return { 'Error' : self.error }
 
 
-def fit(config, ssc, testset=None):
+def fit(config, ssc, testset=None, sampling_method=None):
+  if sampling_method == 'weighted':
+    sample = weighted_sample
+  else:  #  sampling_method == 'random':
+    sample = random_sample
+
   # read data from file
   df = OneDimensionalData(
         os.path.join(config.path_to_results, config.name)
         ).load()
   assert len(df) > 0
-  dataset = df.sample(ssc * 2)
+  dataset = sample(df, ssc * 2)
   trainset = dataset[:ssc]
   testset = dataset[ssc:] if testset is None else testset
   # instantiate model
@@ -88,7 +98,7 @@ def fit2(config, ssc, testset=None):
         os.path.join(config.path_to_results, config.name, '2')
         ).load()
   assert len(df) > 0
-  dataset = df.sample(ssc * 2)
+  dataset = weighted_sample(df, ssc * 2)
   trainset = dataset[:ssc]
   testset = dataset[ssc:] if testset is None else testset
   # instantiate model
@@ -112,7 +122,7 @@ def fit2d(config, ssc, testset=None):
         os.path.join(config.path_to_results, config.name)
         ).load()
   assert len(df) > 0
-  dataset = df.sample(ssc * 2)
+  dataset = weighted_sample(df, ssc * 2)
   trainset = dataset[:ssc]
   testset = dataset[ssc:] if testset is None else testset
   # instantiate model
