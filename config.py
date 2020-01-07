@@ -38,9 +38,9 @@ class BasicConfig:
   time_step = 1e-4
   iterations = 10000  # number of iterations of evolution
   # coupling_vars = [0.5, 1, 10, 90, 130, 200, 240, 300]
-  coupling_vars = np.random.uniform(0, 150, (500,))  # variable `g` values
+  coupling_vars = np.random.uniform(0, 100, (500,))  # variable `g` values
 
-  sub_sample_counts = [ 200, 400, 600, 800 ]
+  sub_sample_counts = [ 1500 ]
 
   def wave_function(x, y):  # a working wave function
     return np.exp(-0.5 * (x**2 + y**2)) / np.sqrt(np.pi)
@@ -117,8 +117,11 @@ class DoubleWell(BasicConfig):
 
   name = 'double'
   coupling = 0.0001
+
   def potential_fn(x, y):
     return (4. - x**2) ** 2 / 2.
+
+  coupling_vars = np.random.uniform(0, 2, (500,))  # variable `g` values
 
 
 class OpticalLattice(BasicConfig):
@@ -126,13 +129,10 @@ class OpticalLattice(BasicConfig):
   name = 'optical_lat'
   coupling = 1
 
-  coupling_vars = np.arange(0.1, 10, 0.5).astype(float)
-  num_plots = 30
-
-  sub_sample_counts = [ 100, 200, 250, 300, 350, 400, 450, 500, 550, 600 ]
-
   def potential_fn(x, y):
     return (x ** 2) / ( 2 + 12 * (math.sin(4 * x) ** 2) )
+
+  coupling_vars = np.random.uniform(0, 2, (500,))  # variable `g` values
 
 
 class BasicTwoComponentConfig:
@@ -156,6 +156,7 @@ class BasicTwoComponentConfig:
   # -------- Approximation ------------------ #
   model = GPApproximation  # approximating model
   sub_sample_count = 250  # number of datapoints to train the mdoel
+  omega = -1
 
 
 class TwoComponentConfig(BasicTwoComponentConfig):
@@ -164,21 +165,23 @@ class TwoComponentConfig(BasicTwoComponentConfig):
   # name
   name = '2comp'
   # coupling coefficients
-  g11 = 103
-  g12 = 100
-  g22 = 97
+  g11 = 1 # 103
+  g12 = 1 # 100
+  g22 = 1 # 97
   couplings = [ g11, g12, g22 ]
   coupling_vars = np.stack(
-      [np.random.uniform(90, 115, (600)),
-      np.random.uniform(88, 113, (600)),
-      np.random.uniform(85, 110, (600))]
+      [np.random.uniform(0, 2, (100)),
+      np.random.uniform(0, 2, (100)),
+      np.random.uniform(0, 2, (100))]
       ).transpose()
   # lattice
   dim, radius = 300, 20.
 
   # potential
+  # def potential_fn(x, y):
+  #   return 0.5 * (x ** 2) + 24 * (math.cos(x)) ** 2
   def potential_fn(x, y):
-    return 0.5 * (x ** 2) + 24 * (math.cos(x)) ** 2
+    return (4. - x**2) ** 2 / 2.
 
   # iterations
   iterations = 20000
@@ -219,11 +222,15 @@ class BasicTwoDimensionalConfig:
   sub_sample_count = 1500  # number of datapoints to train the mdoel
 
 
+
+
+
 class TwoDimConfig(BasicTwoDimensionalConfig):
   name = '2dim'
   coupling_vars = np.random.uniform(0., 50., (500,))  # variable `g` values
 
 
+"""
 class StepPotentialChange(BasicConfig):  # demo of using your own config
   name = 'steppotchange'  # just change what needs to be changed
   coupling = 1
@@ -250,15 +257,45 @@ class FourierPotentialChange(BasicConfig):  # demo of using your own config
   potential_fns = [ get_potential_fn('fourier', j)
       for j in np.random.uniform(0., 0.9, (500,)) ]
 
+class DisorderPotentialChange(BasicConfig):  # demo of using your own config
+  name = 'disorderpotchange'  # just change what needs to be changed
+  coupling = 1
+  _type = 'potential-change'
+  potential_fn = gaussian_disorder_potential(amp=0)
+  wave_function = gaussian_disorder_potential()
+"""
+
+class VecBec(BasicTwoComponentConfig):
+
+  name = 'vecbec'
+  omegas = np.concatenate([np.arange(-20, -2, 0.1), np.arange(-2, 0, 0.01)])
+  # omegas = [-20, -1]
+  dim = 300
+  radius = 20.
+  time_step = 1e-4
+  iterations = 100000
+  # coupling coefficients
+  g11 = 103
+  g12 = 100
+  g22 = 97
+  couplings = [ g11, g12, g22 ]
+
+  def potential_fn(x, y):
+    return 0.5 * (x ** 2) + 24 * (math.cos(x)) ** 2
+
 
 # [[.]] list of configurations
 configs = {
   BasicConfig.name : BasicConfig,
+  DoubleWell.name : DoubleWell,
   OpticalLattice.name : OpticalLattice,
   BasicTwoComponentConfig.name : BasicTwoComponentConfig,
   TwoComponentConfig.name : TwoComponentConfig,
+  TwoComponentConfig.name : TwoComponentConfig,
   TwoDimConfig.name : TwoDimConfig,
-  StepPotentialChange.name : StepPotentialChange,
-  LinearPotentialChange.name : LinearPotentialChange,
-  FourierPotentialChange.name : FourierPotentialChange
+  VecBec.name : VecBec,
+  # DisorderPotentialChange.name : DisorderPotentialChange
+  # StepPotentialChange.name : StepPotentialChange,
+  # LinearPotentialChange.name : LinearPotentialChange,
+  # FourierPotentialChange.name : FourierPotentialChange,
   }
