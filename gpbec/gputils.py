@@ -1,3 +1,4 @@
+import numpy as np
 import gpytorch
 import torch
 
@@ -21,6 +22,7 @@ def choose_kernel(outputs):
         gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
         )
 
+
 def num_tasks(outputs):
   outputs = t(outputs)
   no = outputs.dim()
@@ -40,5 +42,28 @@ def generate_test_io(params):
   raise Exception('Check your parameters')
 
 
-def sample_from_evidence(evidence, n):
-  pass
+def generate_uniform_inputs(params, inputs):
+  uinputs = []
+  x_steps = abs((params['x.high'] - params['x.low']) / params['x.step'])
+  # iterate through variable names
+  for name in inputs:
+    # get bounds
+    lb, ub = params[f'{name}.low'], params[f'{name}.high']
+    # find step size for variable generation
+    step = abs((lb - ub) / x_steps)
+    # generate uniform inputs
+    #  add to list
+    uinputs.append(torch.arange(lb, ub, step))
+    # TODO : verify lengths are equals
+        
+  return torch.stack(uinputs).transpose(1, 0)
+
+
+def sample_from_sim_results(simdata, inputs, outputs, n=100):
+  n_simset = n // len(simdata)  # include weights
+  examples = []
+  for _, simset in simdata.items():
+    idx = np.random.randint(0, len(simset), n_simset)
+    samples = simset[inputs + outputs].iloc[idx].values
+    examples.append(samples)
+  return np.concatenate(examples, axis=0)
