@@ -39,9 +39,14 @@ class GaussianProcess(gpytorch.models.ExactGP):
     return MultivariateNormal(mean_x, covar_x)
 
   def update(self, mll, inputs=None, outputs=None, iterations=50):
-    if inputs is None:
-      inputs = self.inputs
-      outputs = self.outputs
+
+    if inputs is not None and outputs is not None:
+      self.set_train_data(inputs=inputs, targets=outputs, strict=False)
+      self.inputs = inputs
+      self.outputs = outputs
+
+    inputs = self.inputs
+    outputs = self.outputs
     # Find optimal model hyperparameters
     self.train()
     self.likelihood.train()
@@ -70,20 +75,31 @@ class GaussianProcess(gpytorch.models.ExactGP):
     with torch.no_grad(), gpytorch.settings.fast_pred_var():
       return self.likelihood(self(inputs))
 
-  def uncertainty(self, inputs):
-    ub, lb = self.predict(inputs)
+  def sigma(self, inputs):
+    prediction = self.predict(inputs)
+    ub, lb = prediction.confidence_region()
     return torch.abs(ub - lb)
 
 
 class LearningMachine:
 
-  def __init__(self, inputs, outputs):
+  def __init__(self, params, inputs=['g', 'x'], outputs=['psi']):
     self.inputs = inputs  # { g : 1. } < sample input
+    self.outputs = outputs
+    self.params = params
     # generate test inputs, outputs from params
     ti, to = gputils.generate_test_io(params)
     # create and manage a GP
-    self.model, self.mll = gp(ti, to)
+    # self.model, self.mll = gp(ti, to)
+    self.model, self.mll = None, None
 
-  def __call__(self, simdata):
-    inputs, outputs = gputils.generate_io(params, simdata)
-    self.model.update(self.mll, inputs, outputs, iterations=100)
+  def __call__(self, examples, iterations=100):
+    train_x, train_y = gputils.torch_em(examples[:, :2], examples[:, -1])
+    if self.model is None:
+      self.model, self.mll = gp(train_x, train_y)
+    # update GP with new examples
+    self.model.update(self.mll, train_x, train_y, iterations=iterations)
+    # generate uniform inputs
+    uinputs = gputils.generate_uniform_inputs(self.params, self.inputs)
+    # get uncertainty estimate
+    return self.model.sigma(uinputs)
